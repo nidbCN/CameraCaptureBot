@@ -38,7 +38,6 @@ public sealed class CaptureService : IDisposable
     public int StreamHeight { get; }
     public int StreamWidth { get; }
 
-
     #region 创建编码器
     /// <summary>
     /// 创建编解码器
@@ -393,7 +392,7 @@ public sealed class CaptureService : IDisposable
             if (decodeResult != 0)
             {
                 // 解码失败
-                var error = new TimeoutException("Decode timeout.");
+                var error = new TaskCanceledException("Decode timeout.");
                 _logger.LogError(error, "Failed to decode.\n");
                 throw error;
             }
