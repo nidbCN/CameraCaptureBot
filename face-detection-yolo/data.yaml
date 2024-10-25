@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 1
+names: ['persion']
+
+roboflow:
+  workspace: gaein-nidbs-workspace
+  project: camera-face-recognition
+  version: 1
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/gaein-nidbs-workspace/camera-face-recognition/dataset/1
