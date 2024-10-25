@@ -1,8 +1,8 @@
-using FFmpeg.AutoGen;
 using CameraCaptureBot.Core;
 using CameraCaptureBot.Core.Configs;
 using CameraCaptureBot.Core.Extensions.DependencyInjection;
 using CameraCaptureBot.Core.Services;
+using FFmpeg.AutoGen;
 
 DynamicallyLoadedBindings.Initialize();
 

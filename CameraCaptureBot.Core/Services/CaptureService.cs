@@ -1,10 +1,8 @@
-﻿using CameraCaptureBot.Core.Configs;
+﻿using System.Runtime.InteropServices;
+using CameraCaptureBot.Core.Configs;
 using CameraCaptureBot.Core.Extensions;
-using CameraCaptureBot.Core.Utils;
 using FFmpeg.AutoGen;
 using Microsoft.Extensions.Options;
-using System.Runtime.InteropServices;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace CameraCaptureBot.Core.Services;
 
