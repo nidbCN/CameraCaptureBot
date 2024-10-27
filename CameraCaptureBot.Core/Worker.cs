@@ -51,26 +51,30 @@ public class Worker(ILogger<Worker> logger,
     }
     private async Task LoginAsync(CancellationToken stoppingToken)
     {
-        logger.LogInformation("Try login use password, timeout value: 5 sec.");
+        var loggedIn = false;
 
         var pwdLoginTimeoutTokenSrc = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-        var pwdLoginTimeoutToken = CancellationTokenSource
-            .CreateLinkedTokenSource(stoppingToken, pwdLoginTimeoutTokenSrc.Token);
 
-        var loggedIn = false;
         try
         {
-            loggedIn = await botCtx.LoginByPassword(pwdLoginTimeoutToken.Token);
+            logger.LogInformation("Try login use password, timeout value: 5 sec.");
+            loggedIn = await botCtx.LoginByPassword(pwdLoginTimeoutTokenSrc.Token);
         }
         catch (TaskCanceledException e)
         {
             logger.LogError(e, "Password login timeout, try QRCode.");
         }
+        finally
+        {
+            pwdLoginTimeoutTokenSrc.Dispose();
+        }
 
         if (!loggedIn)
         {
+            logger.LogWarning("Password login failed, try QRCode.");
+
             var (url, _) = await botCtx.FetchQrCode()
-                           ?? throw new ApplicationException(message: "Fetch QRCode failed.");
+                           ?? throw new ApplicationException(message: "Fetch QRCode failed.\n");
 
             // The QrCode will be expired in 2 minutes.
             var qrLoginTimeoutTokenSrc = new CancellationTokenSource(TimeSpan.FromMinutes(2));
@@ -83,7 +87,7 @@ public class Worker(ILogger<Worker> logger,
                     }).ReadAsStringAsync(stoppingToken)
             };
 
-            logger.LogInformation("Open link `{url}` and scan the QRCode to login.", link);
+            logger.LogInformation("Open link `{url}` and scan the QRCode to login.", link.Uri.ToString());
 
             // Use both external stopping token and login timeout token.
             using var qrLoginStoppingTokenSrc = CancellationTokenSource
@@ -218,8 +222,6 @@ public class Worker(ILogger<Worker> logger,
     {
         await LoginAsync(stoppingToken);
         ConfigureEvents();
-
-        //new ManualResetEvent(false).WaitOne();
     }
 
     public override Task StopAsync(CancellationToken cancellationToken)
