@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using CameraCaptureBot.Core.Codecs;
 using CameraCaptureBot.Core.Configs;
 using CameraCaptureBot.Core.Extensions;
 using FFmpeg.AutoGen;
@@ -15,6 +16,7 @@ public sealed class CaptureService : IDisposable
 {
     private readonly ILogger<CaptureService> _logger;
     private readonly StreamOption _streamOption;
+    private readonly FfmpegLibWebpEncoder _encoder;
 
     private readonly unsafe AVCodecContext* _decoderCtx;
     private readonly unsafe AVCodecContext* _webpEncoderCtx;
@@ -91,10 +93,11 @@ public sealed class CaptureService : IDisposable
         stream.Write(buffer, 0, packet->size);
     }
 
-    public unsafe CaptureService(ILogger<CaptureService> logger, IOptions<StreamOption> option)
+    public unsafe CaptureService(ILogger<CaptureService> logger, IOptions<StreamOption> option, FfmpegLibWebpEncoder encoder)
     {
         _logger = logger;
         _streamOption = option.Value;
+        _encoder = encoder;
 
         if (_streamOption.Url is null)
             throw new ArgumentNullException(nameof(option), "StreamOption.Url can not be null.");
@@ -354,14 +357,14 @@ public sealed class CaptureService : IDisposable
                                 message =
                                     "output is not available in this state - user must try to send new input";
 
-                                if (_streamOption.KeyFrameOnly)
-                                {
-                                    // 抛出异常，仅关键帧模式中，该错误不可能通过发送更多需要的包来解决
-                                    error = new(message);
+                                //if (_streamOption.KeyFrameOnly)
+                                //{
+                                //    // 抛出异常，仅关键帧模式中，该错误不可能通过发送更多需要的包来解决
+                                //    error = new(message);
 
-                                    _logger.LogError(error, "Received EAGAIN from decoder.\n");
-                                    throw error;
-                                }
+                                //    _logger.LogError(error, "Received EAGAIN from decoder.\n");
+                                //    throw error;
+                                //}
 
                                 // 忽略错误，发送下一个包进行编码，可能足够的包进入解码器可以解决
                                 _logger.LogWarning("Receive EAGAIN from decoder, retry.");
@@ -495,19 +498,28 @@ public sealed class CaptureService : IDisposable
                     var decodedFrame = DecodeNextFrameUnsafe();
                     CloseInput();
 
-                    if (TryEncodeWebpUnsafe(decodedFrame, out var outputImage))
+                    var queue = _encoder.Encode(decodedFrame);
+                    if (queue.Count > 1)
                     {
-                        if (decodedFrame != null)
+                        var bufferSize = queue.Sum(buf => buf.Length);
+                        var buffer = new byte[bufferSize];
+
+                        var copied = 0;
+                        foreach (var bufferBlock in queue)
                         {
-                            ffmpeg.av_frame_unref(decodedFrame);
+                            Buffer.BlockCopy(bufferBlock, 0, buffer, copied, bufferBlock.Length);
+                            copied += bufferBlock.Length;
                         }
 
-                        return (false, null);
+                        LastCapturedImage = buffer;
+                    }
+                    else
+                    {
+                        LastCapturedImage = queue.Dequeue();
                     }
 
-                    LastCapturedImage = outputImage;
                     LastCaptureTime = DateTime.Now;
-                    return (true, outputImage);
+                    return (true, LastCapturedImage);
                 }
             }
             finally

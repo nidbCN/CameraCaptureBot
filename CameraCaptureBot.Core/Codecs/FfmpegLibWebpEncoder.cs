@@ -5,13 +5,15 @@ namespace CameraCaptureBot.Core.Codecs;
 
 public class FfmpegLibWebpEncoder : CodecBase
 {
-
     public FfmpegLibWebpEncoder(ILogger<FfmpegLibWebpEncoder> logger) : base(logger)
     {
         unsafe
         {
             var codec = ffmpeg.avcodec_find_encoder_by_name("libwebp");
             EncoderCtx = ffmpeg.avcodec_alloc_context3(codec);
+
+            EncoderCtx->width = 1920;
+            EncoderCtx->height = 1080;
 
             EncoderCtx->time_base = new() { num = 1, den = 25 }; // 设置时间基准
             EncoderCtx->framerate = new() { num = 25, den = 1 };

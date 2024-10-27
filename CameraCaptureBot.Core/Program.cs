@@ -1,4 +1,5 @@
 using CameraCaptureBot.Core;
+using CameraCaptureBot.Core.Codecs;
 using CameraCaptureBot.Core.Configs;
 using CameraCaptureBot.Core.Extensions.DependencyInjection;
 using CameraCaptureBot.Core.Services;
@@ -19,6 +20,7 @@ builder.Services.Configure<BotOption>(
     builder.Configuration.GetSection(nameof(BotOption)));
 
 builder.Services.AddSingleton<FfmpegLoggerService>();
+builder.Services.AddSingleton<FfmpegLibWebpEncoder>();
 builder.Services.AddSingleton<CaptureService>();
 builder.Services.AddIsoStorages();
 builder.Services.AddBots(() => builder.Configuration
