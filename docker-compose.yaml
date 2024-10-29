@@ -1,9 +1,7 @@
-version: '3.8'
-
 services:
-  ProxyDistributor:
-    image: gaein/camera-screenshot-bot:v1.5
-    container_name: camera-screenshot-bot
+  CameraCaptureBot:
+    image: camera_capture_bot:test
+    container_name: camera-capture-bot
     environment:
       - TZ=Asia/Shanghai
     volumes:
@@ -15,4 +13,4 @@ services:
 
 configs:
   appsettings:
-    file: ./appsettings.json
+    file: ./CameraCaptureBot.Core/appsettings.json
