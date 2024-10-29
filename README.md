@@ -28,7 +28,6 @@ Windows 下载地址: https://www.gyan.dev/ffmpeg/builds/#release-builds
   },
   "BotConfig": {
     "AllowGroups": [
-      761972629
     ]
   },
   "StreamOption": {
