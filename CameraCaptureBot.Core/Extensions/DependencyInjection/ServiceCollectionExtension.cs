@@ -17,7 +17,8 @@ public static class ServiceCollectionExtension
 
     public static void AddBots(this IServiceCollection services, Func<BotOption> config)
     {
-        var botOption = config.Invoke();
+        var botOption = config.Invoke()
+            ?? throw new ArgumentNullException(nameof(config));
         using var isoStore = IsolatedStorageFile.GetStore(
             IsolatedStorageScope.User | IsolatedStorageScope.Application, null, null);
 

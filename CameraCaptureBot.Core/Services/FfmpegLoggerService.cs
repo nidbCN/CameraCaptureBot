@@ -7,18 +7,20 @@ namespace CameraCaptureBot.Core.Services;
 
 public class FfmpegLoggerService
 {
-    private readonly av_log_set_callback_callback _logCallback;
+    // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
+    private readonly av_log_set_callback_callback? _logCallback;
+
     private readonly ILogger<FfmpegLoggerService> _logger;
-    private readonly StreamOption _streamOption;
+
     public FfmpegLoggerService(ILogger<FfmpegLoggerService> logger, IOptions<StreamOption> streamOptions)
     {
         _logger = logger;
-        _streamOption = streamOptions.Value;
+        var streamOption = streamOptions.Value;
 
         // 设置日志
-        if (_streamOption?.LogLevel is null) return;
+        if (streamOption.LogLevel is null) return;
 
-        var level = _streamOption.LogLevel.ToUpper() switch
+        var level = streamOption.LogLevel.ToUpper() switch
         {
             "TRACE" => ffmpeg.AV_LOG_TRACE,
             "VERBOSE" => ffmpeg.AV_LOG_VERBOSE,
@@ -86,7 +88,7 @@ public class FfmpegLoggerService
                     _logger.LogWarning("[level {level}]{msg}", level, line);
                     break;
             }
+
         }
     }
-
 }

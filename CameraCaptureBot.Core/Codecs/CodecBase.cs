@@ -12,85 +12,99 @@ public class CodecBase(ILogger logger) : IDisposable
 
     public unsafe Queue<byte[]> Encode(AVFrame* frame)
     {
-        var linkedBuffer = new Queue<byte[]>(2);
-
-        EncoderCtx->width = frame->width;
-        EncoderCtx->height = frame->height;
-        EncoderCtx->sample_aspect_ratio = frame->sample_aspect_ratio;
-
-        var ret = ffmpeg.avcodec_send_frame(EncoderCtx, frame);
-        if (ret < 0)
+        using (logger.BeginScope(
+                   $"{EncoderCtx->codec_id}@{(long)EncoderCtx:x8}.{nameof(Encode)}"))
         {
-            // handle send exceptions.
-            var exception = new ApplicationException(FfMpegExtension.av_strerror(ret));
-            string? message = null;
+            var linkedBuffer = new Queue<byte[]>(2);
 
-            if (ret == ffmpeg.AVERROR(ffmpeg.EAGAIN))
+            EncoderCtx->width = frame->width;
+            EncoderCtx->height = frame->height;
+            EncoderCtx->sample_aspect_ratio = frame->sample_aspect_ratio;
+
+            logger.LogDebug("Try send frame to encoder.");
+
+            var ret = ffmpeg.avcodec_send_frame(EncoderCtx, frame);
+            if (ret < 0)
             {
-                message =
-                    "input is not accepted in the current state - user must read output with avcodec_receive_packet()" +
-                    "(once all output is read, the packet should be resent, and the call will not fail with EAGAIN).\n";
-            }
-            else if (ret == ffmpeg.AVERROR_EOF)
-            {
-                message =
-                    "the encoder has been flushed, and no new frames can be sent to it\n";
-            }
-            else if (ret == ffmpeg.AVERROR(ffmpeg.EINVAL))
-            {
-                message = "codec not opened, it is a decoder, or requires flush\n";
-            }
-            else if (ret == ffmpeg.AVERROR(ffmpeg.ENOMEM))
-            {
-                message = "failed to add packet to internal queue, or similar\n";
+                // handle send exceptions.
+                var exception = new ApplicationException(FfMpegExtension.av_strerror(ret));
+                string? message = null;
+
+                if (ret == ffmpeg.AVERROR(ffmpeg.EAGAIN))
+                {
+                    message =
+                        "input is not accepted in the current state - user must read output with avcodec_receive_packet()" +
+                        "(once all output is read, the packet should be resent, and the call will not fail with EAGAIN).\n";
+                }
+                else if (ret == ffmpeg.AVERROR_EOF)
+                {
+                    message =
+                        "the encoder has been flushed, and no new frames can be sent to it\n";
+                }
+                else if (ret == ffmpeg.AVERROR(ffmpeg.EINVAL))
+                {
+                    message = "codec not opened, it is a decoder, or requires flush\n";
+                }
+                else if (ret == ffmpeg.AVERROR(ffmpeg.ENOMEM))
+                {
+                    message = "failed to add packet to internal queue, or similar\n";
+                }
+
+#pragma warning disable CA2254
+                logger.LogError(exception, message);
+#pragma warning restore CA2254
+                throw exception;
             }
 
-            logger.LogError(exception, message);
-            throw exception;
+            logger.LogInformation("Success sent frame to decoder.");
+            logger.LogDebug("Try receive packet from decoder.");
+
+            for (ret = ReceivePacket(); ret == 0 && Packet->size > 0; ret = ReceivePacket())
+            {
+                logger.LogInformation("Received packet[{pos}] from decoder, size:{size}.", Packet->pos, Packet->size);
+                var buffer = new byte[Packet->size];
+                Marshal.Copy((IntPtr)Packet->data, buffer, 0, Packet->size);
+                linkedBuffer.Enqueue(buffer);
+            }
+
+            if (ret == ffmpeg.AVERROR(ffmpeg.EAGAIN) || ret == 0)
+            {
+                logger.LogInformation("Received EAGAIN from encoder, Encode completed with {num} packets.", linkedBuffer.Count);
+            }
+            else
+            {
+                // references:
+                // * https://ffmpeg.org/doxygen/6.1/group__lavc__decoding.html#ga5b8eff59cf259747cf0b31563e38ded6
+                var exception = new ApplicationException(
+                    FfMpegExtension.av_strerror(ret));
+                var message = "Uncaught error occured during encoding.\n";
+
+                if (ret == ffmpeg.AVERROR_EOF)
+                {
+                    // > the encoder has been fully flushed, and there will be no more output packets
+                    // should not happen because nobody send flush frame.
+                    message =
+                        "The encoder has been fully flushed, and there will be no more output packets.\n";
+                }
+                else if (ret == ffmpeg.AVERROR(ffmpeg.EINVAL))
+                {
+                    // > codec not opened, or it is a decoder
+                    // should not happen because codec has been opened correct in ctor.
+                    message = "Codec not opened, or it is a decoder.\n";
+                }
+
+#pragma warning disable CA2254
+                logger.LogError(exception, message);
+#pragma warning restore CA2254
+
+                throw exception;
+            }
+
+            return linkedBuffer;
         }
-
-        for (ret = SendPacket(); ret == 0 && Packet->size > 0; ret = SendPacket())
-        {
-            var buffer = new byte[Packet->size];
-            Marshal.Copy((IntPtr)Packet->data, buffer, 0, Packet->size);
-            linkedBuffer.Enqueue(buffer);
-        }
-
-        if (ret == ffmpeg.AVERROR(ffmpeg.EAGAIN) || ret == 0)
-        {
-            logger.LogWarning("Encode completed with {num} packets.", linkedBuffer.Count);
-        }
-        else
-        {
-            // references:
-            // * https://ffmpeg.org/doxygen/6.1/group__lavc__decoding.html#ga5b8eff59cf259747cf0b31563e38ded6
-            var exception = new ApplicationException(
-                FfMpegExtension.av_strerror(ret));
-            var message = "Uncaught error occured during encoding.\n";
-
-            if (ret == ffmpeg.AVERROR_EOF)
-            {
-                // > the encoder has been fully flushed, and there will be no more output packets
-                // should not happen because nobody send flush frame.
-                message =
-                    "The encoder has been fully flushed, and there will be no more output packets.\n";
-            }
-            else if (ret == ffmpeg.AVERROR(ffmpeg.EINVAL))
-            {
-                // > codec not opened, or it is a decoder
-                // should not happen because codec has been opened correct in ctor.
-                message = "Codec not opened, or it is a decoder.\n";
-            }
-
-            logger.LogError(exception, message);
-
-            throw exception;
-        }
-
-        return linkedBuffer;
     }
 
-    private unsafe int SendPacket()
+    private unsafe int ReceivePacket()
     {
         ffmpeg.av_packet_unref(Packet);
         return ffmpeg.avcodec_receive_packet(EncoderCtx, Packet);

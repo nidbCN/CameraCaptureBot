@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using CameraCaptureBot.Core.Extensions;
+﻿using CameraCaptureBot.Core.Extensions;
 using FFmpeg.AutoGen;
 
 namespace CameraCaptureBot.Core.Codecs
@@ -33,7 +28,6 @@ namespace CameraCaptureBot.Core.Codecs
                 ffmpeg.avcodec_open2(EncoderCtx, codec, null)
                     .ThrowExceptionIfError();
             }
-
         }
 
         public unsafe void ConvertToRGB24(AVFrame* frame)

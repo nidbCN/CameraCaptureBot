@@ -21,9 +21,10 @@ builder.Services.AddSingleton<FfmpegLoggerService>();
 builder.Services.AddSingleton<FfmpegLibWebpEncoder>();
 builder.Services.AddSingleton<CaptureService>();
 builder.Services.AddIsoStorages();
+
 builder.Services.AddBots(() => builder.Configuration
-    .GetSection(nameof(BotOption))
-    .Get<BotOption>() ?? new BotOption());
+    .GetRequiredSection(nameof(BotOption))
+    .Get<BotOption>()!);
 builder.Services.AddHostedService<Worker>();
 
 var host = builder.Build();
@@ -50,8 +51,7 @@ return;
 void ConfigureFfMpeg(StreamOption? config)
 {
     // config ffmpeg
-    ffmpeg.RootPath =
-        config?.FfmpegRoot;
+    ffmpeg.RootPath = config?.FfmpegRoot;
 
     DynamicallyLoadedBindings.Initialize();
 
