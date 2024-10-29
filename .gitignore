@@ -1,7 +1,8 @@
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudio,windows,linux,aspnetcore,dotnetcore
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudio,windows,linux,aspnetcore,dotnetcore
-
+IsolatedStorage/
 appsettings.json
+**/appsettings.*.json
 
 ### ASPNETCore ###
 ## Ignore Visual Studio temporary files, build results, and
