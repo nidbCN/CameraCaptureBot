@@ -5,8 +5,6 @@ using CameraCaptureBot.Core.Extensions.DependencyInjection;
 using CameraCaptureBot.Core.Services;
 using FFmpeg.AutoGen;
 
-DynamicallyLoadedBindings.Initialize();
-
 var builder = Host.CreateApplicationBuilder(args);
 
 builder.Services.AddWindowsService(s =>
@@ -54,6 +52,8 @@ void ConfigureFfMpeg(StreamOption? config)
     // config ffmpeg
     ffmpeg.RootPath =
         config?.FfmpegRoot;
+
+    DynamicallyLoadedBindings.Initialize();
 
     // test ffmpeg load
     try

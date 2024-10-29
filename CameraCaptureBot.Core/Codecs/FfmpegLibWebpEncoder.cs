@@ -38,7 +38,6 @@ public class FfmpegLibWebpEncoder : CodecBase
     {
         unsafe
         {
-            ffmpeg.avcodec_close(EncoderCtx);
             var encoderCtx = EncoderCtx;
             ffmpeg.avcodec_free_context(&encoderCtx);
         }

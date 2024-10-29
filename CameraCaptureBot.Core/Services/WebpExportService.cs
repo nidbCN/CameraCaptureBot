@@ -54,6 +54,7 @@ public class WebpExportService : IDisposable
 
     public unsafe void Dispose()
     {
-        ffmpeg.avcodec_close(_webpEncoderCtx);
+        var encoderCtx = _webpEncoderCtx;
+        ffmpeg.avcodec_free_context(&encoderCtx);
     }
 }
