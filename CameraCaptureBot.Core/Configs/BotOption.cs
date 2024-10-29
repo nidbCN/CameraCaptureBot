@@ -2,7 +2,7 @@
 
 namespace CameraCaptureBot.Core.Configs;
 
-public class BotOption
+public record BotOption
 {
     public string KeyStoreFile { get; set; } = "keystore.json";
     public string DeviceInfoFile { get; set; } = "deviceInfo.json";
