@@ -1,6 +1,6 @@
 services:
   CameraCaptureBot:
-    image: camera_capture_bot:test
+    image: registry.cn-beijing.aliyuncs.com/nidb-cr/camera-capture-bot:v8.1.2.2
     container_name: camera-capture-bot
     environment:
       - TZ=Asia/Shanghai
