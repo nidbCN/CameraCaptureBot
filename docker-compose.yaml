@@ -5,7 +5,7 @@ services:
     environment:
       - TZ=Asia/Shanghai
     volumes:
-      - ./Images/:/app/Images/
+      - ./IsolatedStorage/:/root/.local/share/IsolatedStorage/
     configs:
       - source: appsettings
         target: /app/appsettings.json
