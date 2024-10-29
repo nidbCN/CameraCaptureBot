@@ -4,6 +4,7 @@ using CameraCaptureBot.Core.Configs;
 using CameraCaptureBot.Core.Extensions.DependencyInjection;
 using CameraCaptureBot.Core.Services;
 using FFmpeg.AutoGen;
+using Microsoft.Extensions.Options;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -13,9 +14,9 @@ builder.Services.AddWindowsService(s =>
 });
 
 builder.Services.Configure<StreamOption>(
-    builder.Configuration.GetSection(nameof(StreamOption)));
+    builder.Configuration.GetRequiredSection(nameof(StreamOption)));
 builder.Services.Configure<BotOption>(
-    builder.Configuration.GetSection(nameof(BotOption)));
+    builder.Configuration.GetRequiredSection(nameof(BotOption)));
 
 builder.Services.AddSingleton<FfmpegLoggerService>();
 builder.Services.AddSingleton<FfmpegLibWebpEncoder>();
@@ -30,28 +31,21 @@ builder.Services.AddHostedService<Worker>();
 var host = builder.Build();
 
 var logger = host.Services.GetRequiredService<ILogger<Program>>();
-var env = host.Services.GetRequiredService<IHostEnvironment>();
+var streamOption = host.Services.GetRequiredService<IOptions<StreamOption>>();
 
-var streamConfig = builder.Configuration
-    .GetSection(nameof(StreamOption))
-    .Get<StreamOption>();
-ConfigureFfMpeg(streamConfig);
-
-// set current directory
-logger.LogDebug("Content Root: {r}, current {c}, base {b}",
-    builder.Environment.ContentRootPath,
-    Directory.GetCurrentDirectory(),
-    AppContext.BaseDirectory
-);
-Directory.SetCurrentDirectory(env.ContentRootPath);
+ConfigureFfMpeg(logger, streamOption.Value);
 
 host.Run();
 return;
 
-void ConfigureFfMpeg(StreamOption? config)
+static void ConfigureFfMpeg(ILogger logger, StreamOption config)
 {
+    ArgumentNullException.ThrowIfNull(config);
+
+    logger.LogInformation("Bind ffmpeg root path to {path}.", ffmpeg.RootPath);
+
     // config ffmpeg
-    ffmpeg.RootPath = config?.FfmpegRoot;
+    ffmpeg.RootPath = config.FfmpegRoot;
 
     DynamicallyLoadedBindings.Initialize();
 
