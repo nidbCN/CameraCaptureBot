@@ -1,11 +1,12 @@
 ﻿using CameraCaptureBot.Core.Extensions;
+using CameraCaptureBot.Core.Utils;
 using FFmpeg.AutoGen;
 
 namespace CameraCaptureBot.Core.Codecs;
 
 public class FfmpegBmpEncoder : CodecBase
 {
-    public FfmpegBmpEncoder(ILogger<FfmpegBmpEncoder> logger) : base(logger)
+    public FfmpegBmpEncoder(ILogger<FfmpegBmpEncoder> logger, BinarySizeFormatter format) : base(logger, format)
     {
         unsafe
         {

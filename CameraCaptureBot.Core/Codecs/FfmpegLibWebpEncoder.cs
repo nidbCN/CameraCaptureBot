@@ -1,11 +1,12 @@
 ﻿using CameraCaptureBot.Core.Extensions;
+using CameraCaptureBot.Core.Utils;
 using FFmpeg.AutoGen;
 
 namespace CameraCaptureBot.Core.Codecs;
 
 public class FfmpegLibWebpEncoder : CodecBase
 {
-    public FfmpegLibWebpEncoder(ILogger<FfmpegLibWebpEncoder> logger) : base(logger)
+    public FfmpegLibWebpEncoder(ILogger<FfmpegLibWebpEncoder> logger, BinarySizeFormatter format) : base(logger, format)
     {
         unsafe
         {
