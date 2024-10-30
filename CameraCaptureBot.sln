@@ -10,6 +10,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "解决方案项", "解决方案项", "{6A372DD0-BE70-4314-835A-0E95E250A29C}"
 	ProjectSection(SolutionItems) = preProject
 		Dockerfile = Dockerfile
+		Dockerfile.cn = Dockerfile.cn
 	EndProjectSection
 EndProject
 Global

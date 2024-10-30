@@ -22,7 +22,7 @@ RUN dotnet publish "./CameraCaptureBot.Core/CameraCaptureBot.Core.csproj" -c $BU
 FROM base AS ffmpeg
 ENV DEBIAN_FRONTEND=noninteractive
 USER root
-RUN apt update
+RUN apt update && \
     sed -i '/^Suites:.*bookworm[^-]/ s/$/ testing/' /etc/apt/sources.list.d/debian.sources && \
     apt update && \
     apt install -y ffmpeg -t testing
