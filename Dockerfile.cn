@@ -23,6 +23,7 @@ FROM base AS ffmpeg
 ENV DEBIAN_FRONTEND=noninteractive
 USER root
 RUN apt update
+    sed -i 's|deb.debian.org/debian|ftp.cn.debian.org/debian|g' /etc/apt/sources.list.d/debian.sources && \
     sed -i '/^Suites:.*bookworm[^-]/ s/$/ testing/' /etc/apt/sources.list.d/debian.sources && \
     apt update && \
     apt install -y ffmpeg -t testing

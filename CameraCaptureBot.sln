@@ -7,6 +7,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CameraCaptureBot.Core", "Ca
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lagrange.Core", "Lagrange.Core\Lagrange.Core\Lagrange.Core.csproj", "{5C0128AF-478C-4322-8B08-D6F4D00559F0}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "解决方案项", "解决方案项", "{6A372DD0-BE70-4314-835A-0E95E250A29C}"
+	ProjectSection(SolutionItems) = preProject
+		Dockerfile = Dockerfile
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,10 +22,6 @@ Global
 		{3789A3DB-6ABB-4966-AC8F-821DA758EDED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3789A3DB-6ABB-4966-AC8F-821DA758EDED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3789A3DB-6ABB-4966-AC8F-821DA758EDED}.Release|Any CPU.Build.0 = Release|Any CPU
-		{92787D36-7D58-4C58-98C3-99FA2CE4DA78}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{92787D36-7D58-4C58-98C3-99FA2CE4DA78}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{92787D36-7D58-4C58-98C3-99FA2CE4DA78}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{92787D36-7D58-4C58-98C3-99FA2CE4DA78}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5C0128AF-478C-4322-8B08-D6F4D00559F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5C0128AF-478C-4322-8B08-D6F4D00559F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5C0128AF-478C-4322-8B08-D6F4D00559F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
