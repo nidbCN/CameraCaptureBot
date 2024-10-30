@@ -245,9 +245,10 @@ public sealed class CaptureService : IDisposable
                     {
                         // 取到了 stream 中的包
                         _logger.LogDebug(
-                            "Find packet[{id}] in stream {index}, pts(display):{pts}, dts(decode):{dts}, key frame flag:{containsKey}",
+                            "Find packet[{id}] in stream {index}, size:{size}, pts(display):{pts}, dts(decode):{dts}, key frame flag:{containsKey}",
                             _packet->pos,
                             _packet->stream_index,
+                            string.Format(_formatter, "{0}", _packet->size),
                             FfmpegTimeToTimeSpan(_packet->pts, _decoderCtx->time_base).ToString("c"),
                             FfmpegTimeToTimeSpan(_packet->dts, _decoderCtx->time_base).ToString("c"),
                             (_packet->flags & ffmpeg.AV_PKT_FLAG_KEY) == 1 ? ffmpeg.AV_PKT_FLAG_KEY.ToString() : "NO_FLAG"
