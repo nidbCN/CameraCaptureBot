@@ -11,10 +11,24 @@ public class CodecBase(ILogger logger, BinarySizeFormatter binarySizeFormat) : I
 
     protected readonly unsafe AVPacket* Packet = ffmpeg.av_packet_alloc();
 
+    private static unsafe string BytePointerToString(byte* bytePtr)
+    {
+        // 计算字符串的长度
+        var length = 0;
+        while (*(bytePtr + length) != 0)
+            length++;
+
+        // 从指针创建字符串
+        return System.Text.Encoding.UTF8.GetString(new Span<byte>(bytePtr, length));
+    }
+
     public unsafe Queue<byte[]> Encode(AVFrame* frame)
     {
         using (logger.BeginScope(
-                   $"{EncoderCtx->codec_id}@{(IntPtr)EncoderCtx:x16}.{nameof(Encode)}"))
+                   "{codec}@0x{id:x16}.{func}",
+                   BytePointerToString(EncoderCtx->codec->name),
+                   (IntPtr)EncoderCtx,
+                   nameof(Encode)))
         {
             var linkedBuffer = new Queue<byte[]>(2);
 
@@ -22,7 +36,7 @@ public class CodecBase(ILogger logger, BinarySizeFormatter binarySizeFormat) : I
             EncoderCtx->height = frame->height;
             EncoderCtx->sample_aspect_ratio = frame->sample_aspect_ratio;
 
-            logger.LogDebug("Try send frame@{id:x16} to encoder.", (IntPtr)frame->metadata);
+            logger.LogDebug("Try send frame@0x{id:x16} to encoder.", frame->GetHashCode());
 
             var ret = ffmpeg.avcodec_send_frame(EncoderCtx, frame);
             if (ret < 0)
@@ -57,7 +71,7 @@ public class CodecBase(ILogger logger, BinarySizeFormatter binarySizeFormat) : I
                 throw exception;
             }
 
-            logger.LogInformation("Success sent frame@{id:x16} to decoder.", (IntPtr)frame->metadata);
+            logger.LogInformation("Success sent frame@0x{id:x16} to decoder.", frame->GetHashCode());
             logger.LogDebug("If there's no another usage, this frame can be release now.");
             logger.LogDebug("Try receive packet from decoder.");
 

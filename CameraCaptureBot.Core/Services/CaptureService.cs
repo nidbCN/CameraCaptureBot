@@ -2,6 +2,7 @@
 using CameraCaptureBot.Core.Codecs;
 using CameraCaptureBot.Core.Configs;
 using CameraCaptureBot.Core.Extensions;
+using CameraCaptureBot.Core.Utils;
 using FFmpeg.AutoGen;
 using Microsoft.Extensions.Options;
 
@@ -16,6 +17,7 @@ public sealed class CaptureService : IDisposable
 {
     private readonly ILogger<CaptureService> _logger;
     private readonly IDisposable? _scoop;
+    private readonly BinarySizeFormatter _formatter;
     private readonly StreamOption _streamOption;
     private readonly FfmpegLibWebpEncoder _encoder;
 
@@ -93,11 +95,12 @@ public sealed class CaptureService : IDisposable
         stream.Write(buffer, 0, packet->size);
     }
 
-    public unsafe CaptureService(ILogger<CaptureService> logger, IOptions<StreamOption> option, FfmpegLibWebpEncoder encoder)
+    public unsafe CaptureService(ILogger<CaptureService> logger, IOptions<StreamOption> option, FfmpegLibWebpEncoder encoder, BinarySizeFormatter formatter)
     {
         _logger = logger;
         _streamOption = option.Value;
         _encoder = encoder;
+        _formatter = formatter;
 
         _scoop = logger.BeginScope(nameof(CaptureService));
 
@@ -215,7 +218,7 @@ public sealed class CaptureService : IDisposable
     /// <returns></returns>
     public unsafe AVFrame* DecodeNextFrameUnsafe()
     {
-        using (_logger.BeginScope($"Decoder@0x{_decoderCtx->GetHashCode():X8}"))
+        using (_logger.BeginScope($"Decoder@0x{_decoderCtx->GetHashCode():x16}"))
         {
             var decodeResult = -1;
             var timeoutTokenSource = new CancellationTokenSource(
@@ -245,21 +248,22 @@ public sealed class CaptureService : IDisposable
                         readResult.ThrowExceptionIfError();
                     } while (_packet->stream_index != _streamIndex);
 
-                    using (_logger.BeginScope($"Packet@0x{_packet->data->GetHashCode():x8}"))
+                    using (_logger.BeginScope($"Packet[{_packet->pos}]"))
                     {
                         // 取到了 stream 中的包
                         _logger.LogDebug(
-                            "Find packet in stream {index}, pts(decode):{pts}, dts(display):{dts}, key frame flag:{containsKey}",
+                            "Find packet[{id}] in stream {index}, pts(display):{pts}, dts(decode):{dts}, key frame flag:{containsKey}",
+                            _packet->pos,
                             _packet->stream_index,
                             FfmpegTimeToTimeSpan(_packet->pts, _decoderCtx->time_base).ToString("c"),
                             FfmpegTimeToTimeSpan(_packet->dts, _decoderCtx->time_base).ToString("c"),
-                            _packet->flags & ffmpeg.AV_PKT_FLAG_KEY
+                            (_packet->flags & ffmpeg.AV_PKT_FLAG_KEY) == 1 ? ffmpeg.AV_PKT_FLAG_KEY.ToString() : "NO_FLAG"
                         );
 
                         // 空包
                         if (_packet->size <= 0)
                         {
-                            _logger.LogWarning("Empty packet, ignore.");
+                            _logger.LogWarning("Packet[{id}] with invalid size {size}, ignore.", _packet->pos, _packet->size.ToString(_formatter));
                         }
 
                         // 校验关键帧
@@ -267,7 +271,7 @@ public sealed class CaptureService : IDisposable
                         {
                             if ((_packet->flags & ffmpeg.AV_PKT_FLAG_KEY) == 0x00)
                             {
-                                _logger.LogWarning("Packet {id} not contains KEY frame, {options} enabled, drop.",
+                                _logger.LogInformation("Packet[{id}] not contains KEY frame, {options} enabled, drop.",
                                     _packet->ToString(), nameof(StreamOption.KeyFrameOnly));
                                 continue;
                             }
@@ -276,12 +280,12 @@ public sealed class CaptureService : IDisposable
                         // 校验 DTS/PTS
                         if (_packet->dts < 0 || _packet->pts < 0)
                         {
-                            _logger.LogWarning("Packet dts or pts < 0, drop.");
+                            _logger.LogWarning("Packet[{id}] dts or pts < 0, drop.", _packet->pos);
                             continue;
                         }
 
                         // 尝试发送
-                        _logger.LogDebug("Try send packet to decoder.");
+                        _logger.LogDebug("Try send packet[{id}] to decoder.", _packet->pos);
                         var sendResult = ffmpeg.avcodec_send_packet(_decoderCtx, _packet);
 
                         if (sendResult == ffmpeg.AVERROR(ffmpeg.EAGAIN))
@@ -299,7 +303,7 @@ public sealed class CaptureService : IDisposable
                         if (sendResult == 0 || sendResult == ffmpeg.AVERROR_EOF)
                         {
                             // 发送成功
-                            _logger.LogDebug("Packet sent success, try get decoded frame.");
+                            _logger.LogDebug("Packet[{id}] sent success, try get decoded frame.", _packet->pos);
                             // 获取解码结果
                             decodeResult = ffmpeg.avcodec_receive_frame(_decoderCtx, _frame);
                         }
@@ -308,7 +312,7 @@ public sealed class CaptureService : IDisposable
                             var error = new ApplicationException(FfMpegExtension.av_strerror(sendResult));
 
                             // 无法处理的发送失败
-                            _logger.LogError(error, "Send packet to decoder failed.\n");
+                            _logger.LogError(error, "Send packet[{id}] to decoder failed.\n", _packet->pos);
 
                             throw error;
                         }
@@ -364,7 +368,8 @@ public sealed class CaptureService : IDisposable
                         }
 
                         // 解码正常
-                        _logger.LogInformation("Decode video success. type {type}, pts {pts}.",
+                        _logger.LogInformation("Decode frame@0x{id:x16} success. type {type}, pts {pts}.",
+                            _frame->GetHashCode(),
                             _frame->pict_type.ToString(),
                             FfmpegTimeToTimeSpan(_frame->pts, _decoderCtx->time_base).ToString("c"));
 

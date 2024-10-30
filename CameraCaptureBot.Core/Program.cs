@@ -9,6 +9,12 @@ using CameraCaptureBot.Core.Utils;
 using FFmpeg.AutoGen;
 using Microsoft.Extensions.Options;
 
+
+var i = 155608;
+Console.WriteLine(i.ToString(new BinarySizeFormatter()));
+
+return;
+
 var builder = Host.CreateApplicationBuilder(args);
 
 builder.Services.AddWindowsService(s =>

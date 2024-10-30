@@ -1,4 +1,6 @@
-﻿namespace CameraCaptureBot.Core.Utils;
+﻿using System.Drawing;
+
+namespace CameraCaptureBot.Core.Utils;
 
 public sealed class BinarySizeFormatter : IFormatProvider, ICustomFormatter
 {
@@ -6,14 +8,14 @@ public sealed class BinarySizeFormatter : IFormatProvider, ICustomFormatter
         => formatType == typeof(ICustomFormatter) ? this : null;
 
     public string Format(string? format, object? arg, IFormatProvider? formatProvider)
-    {
-        if (arg is uint size)
-        {
-            return FormatSize(size);
-        }
-
-        return arg?.ToString() ?? string.Empty;
-    }
+     => arg switch
+     {
+         uint usize => FormatSize(usize),
+         int size => size < 0 ? '-' + FormatSize((uint)-size) : FormatSize((uint)size),
+         ulong uLongSize => FormatSize(uLongSize),
+         long longSize => longSize < 0 ? '-' + FormatSize((ulong)-longSize) : FormatSize((ulong)longSize),
+         _ => arg?.ToString() ?? string.Empty
+     };
 
     private static string FormatSize(ulong size)
         => size switch
@@ -25,9 +27,6 @@ public sealed class BinarySizeFormatter : IFormatProvider, ICustomFormatter
             _ => $"{size / (1024 * 1024 * 1024 * 1024.0):F2}TB"
         };
 
-    private static string FormatSize(long size)
-        => size < 0 ? size.ToString() : FormatSize((ulong)size);
-
     private static string FormatSize(uint size)
         => size switch
         {
@@ -36,7 +35,4 @@ public sealed class BinarySizeFormatter : IFormatProvider, ICustomFormatter
             < 1024 * 1024 * 1024 => $"{size / (1024 * 1024.0):F2}MB",
             _ => $"{size / (1024 * 1024 * 1024.0):F2}GB"
         };
-
-    private static string FormatSize(int size)
-        => size < 0 ? size.ToString() : FormatSize((uint)size);
 }
