@@ -87,14 +87,7 @@ public sealed class CaptureService : IDisposable
         return ctx;
     }
     #endregion
-
-    public static unsafe void WriteToStream(Stream stream, AVPacket* packet)
-    {
-        var buffer = new byte[packet->size];
-        Marshal.Copy((IntPtr)packet->data, buffer, 0, packet->size);
-        stream.Write(buffer, 0, packet->size);
-    }
-
+    
     public unsafe CaptureService(ILogger<CaptureService> logger, IOptions<StreamOption> option, FfmpegLibWebpEncoder encoder, BinarySizeFormatter formatter)
     {
         _logger = logger;
@@ -263,7 +256,9 @@ public sealed class CaptureService : IDisposable
                         // 空包
                         if (_packet->size <= 0)
                         {
-                            _logger.LogWarning("Packet[{id}] with invalid size {size}, ignore.", _packet->pos, _packet->size.ToString(_formatter));
+                            _logger.LogWarning("Packet[{id}] with invalid size {size}, ignore.",
+                                _packet->pos,
+                                string.Format(_formatter, "{0}", _packet->size));
                         }
 
                         // 校验关键帧

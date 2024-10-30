@@ -19,7 +19,7 @@ builder.Services.Configure<StreamOption>(
 builder.Services.Configure<BotOption>(
     builder.Configuration.GetRequiredSection(nameof(BotOption)));
 
-builder.Services.AddScoped<BinarySizeFormatter>();
+builder.Services.AddTransient<BinarySizeFormatter>();
 
 builder.Services.AddSingleton<FfmpegLoggerService>();
 builder.Services.AddSingleton<FfmpegLibWebpEncoder>();

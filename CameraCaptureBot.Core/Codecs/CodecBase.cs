@@ -77,7 +77,10 @@ public class CodecBase(ILogger logger, BinarySizeFormatter binarySizeFormat) : I
 
             for (ret = ReceivePacket(); ret == 0 && Packet->size > 0; ret = ReceivePacket())
             {
-                logger.LogInformation("Received packet[{pos}] from decoder, size:{size}.", Packet->pos, Packet->size.ToString(binarySizeFormat));
+                logger.LogInformation("Received packet[{pos}] from decoder, size:{size}.",
+                    Packet->pos,
+                    string.Format(binarySizeFormat, "{0}", Packet->size));
+
                 var buffer = new byte[Packet->size];
                 Marshal.Copy((IntPtr)Packet->data, buffer, 0, Packet->size);
                 linkedBuffer.Enqueue(buffer);
