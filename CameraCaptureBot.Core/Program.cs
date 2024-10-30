@@ -1,5 +1,3 @@
-using System.Globalization;
-using System.Runtime.Serialization.Formatters.Binary;
 using CameraCaptureBot.Core;
 using CameraCaptureBot.Core.Codecs;
 using CameraCaptureBot.Core.Configs;
@@ -8,12 +6,6 @@ using CameraCaptureBot.Core.Services;
 using CameraCaptureBot.Core.Utils;
 using FFmpeg.AutoGen;
 using Microsoft.Extensions.Options;
-
-
-var i = 155608;
-Console.WriteLine(i.ToString(new BinarySizeFormatter()));
-
-return;
 
 var builder = Host.CreateApplicationBuilder(args);
 
