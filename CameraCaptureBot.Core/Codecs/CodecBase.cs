@@ -1,10 +1,11 @@
 ﻿using CameraCaptureBot.Core.Extensions;
 using FFmpeg.AutoGen;
 using System.Runtime.InteropServices;
+using CameraCaptureBot.Core.Utils;
 
 namespace CameraCaptureBot.Core.Codecs;
 
-public class CodecBase(ILogger logger) : IDisposable
+public class CodecBase(ILogger logger, BinarySizeFormatter binarySizeFormat) : IDisposable
 {
     protected unsafe AVCodecContext* EncoderCtx;
 
@@ -13,7 +14,7 @@ public class CodecBase(ILogger logger) : IDisposable
     public unsafe Queue<byte[]> Encode(AVFrame* frame)
     {
         using (logger.BeginScope(
-                   $"{EncoderCtx->codec_id}@{(long)EncoderCtx:x8}.{nameof(Encode)}"))
+                   $"{EncoderCtx->codec_id}@{(IntPtr)EncoderCtx:x16}.{nameof(Encode)}"))
         {
             var linkedBuffer = new Queue<byte[]>(2);
 
@@ -21,7 +22,7 @@ public class CodecBase(ILogger logger) : IDisposable
             EncoderCtx->height = frame->height;
             EncoderCtx->sample_aspect_ratio = frame->sample_aspect_ratio;
 
-            logger.LogDebug("Try send frame to encoder.");
+            logger.LogDebug("Try send frame@{id:x16} to encoder.", (IntPtr)frame->metadata);
 
             var ret = ffmpeg.avcodec_send_frame(EncoderCtx, frame);
             if (ret < 0)
@@ -47,7 +48,7 @@ public class CodecBase(ILogger logger) : IDisposable
                 }
                 else if (ret == ffmpeg.AVERROR(ffmpeg.ENOMEM))
                 {
-                    message = "failed to add packet to internal queue, or similar\n";
+                    message = "failed to add packet to (ffmpeg-managed) internal queue, or similar\n";
                 }
 
 #pragma warning disable CA2254
@@ -56,12 +57,13 @@ public class CodecBase(ILogger logger) : IDisposable
                 throw exception;
             }
 
-            logger.LogInformation("Success sent frame to decoder.");
+            logger.LogInformation("Success sent frame@{id:x16} to decoder.", (IntPtr)frame->metadata);
+            logger.LogDebug("If there's no another usage, this frame can be release now.");
             logger.LogDebug("Try receive packet from decoder.");
 
             for (ret = ReceivePacket(); ret == 0 && Packet->size > 0; ret = ReceivePacket())
             {
-                logger.LogInformation("Received packet[{pos}] from decoder, size:{size}.", Packet->pos, Packet->size);
+                logger.LogInformation("Received packet[{pos}] from decoder, size:{size}.", Packet->pos, Packet->size.ToString(binarySizeFormat));
                 var buffer = new byte[Packet->size];
                 Marshal.Copy((IntPtr)Packet->data, buffer, 0, Packet->size);
                 linkedBuffer.Enqueue(buffer);

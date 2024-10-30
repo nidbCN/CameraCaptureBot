@@ -1,8 +1,11 @@
+using System.Globalization;
+using System.Runtime.Serialization.Formatters.Binary;
 using CameraCaptureBot.Core;
 using CameraCaptureBot.Core.Codecs;
 using CameraCaptureBot.Core.Configs;
 using CameraCaptureBot.Core.Extensions.DependencyInjection;
 using CameraCaptureBot.Core.Services;
+using CameraCaptureBot.Core.Utils;
 using FFmpeg.AutoGen;
 using Microsoft.Extensions.Options;
 
@@ -17,6 +20,8 @@ builder.Services.Configure<StreamOption>(
     builder.Configuration.GetRequiredSection(nameof(StreamOption)));
 builder.Services.Configure<BotOption>(
     builder.Configuration.GetRequiredSection(nameof(BotOption)));
+
+builder.Services.AddScoped<IFormatProvider, BinarySizeFormatter>();
 
 builder.Services.AddSingleton<FfmpegLoggerService>();
 builder.Services.AddSingleton<FfmpegLibWebpEncoder>();
