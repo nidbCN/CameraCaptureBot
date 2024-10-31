@@ -296,8 +296,7 @@ public sealed class CaptureService : IDisposable
                         readResult.ThrowExceptionIfError();
                     } while (_packet->stream_index != _streamIndex);
 
-                    if (scope is not null)
-                        scope?.Dispose();
+                    scope?.Dispose();
                     scope = _logger.BeginScope($"Packet@0x{_packet->buf->GetHashCode():x8}");
 
                     // 取到了 stream 中的包
