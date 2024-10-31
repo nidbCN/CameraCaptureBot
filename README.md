@@ -1,3 +1,7 @@
+# CameraCaptureBot
+
+Build Status: ![Build](https://github.com/nidbCN/CameraCaptureBot/actions/workflows/dotnet.yml/badge.svg)
+
 # 部署
 
 ## docker compose [推荐]
@@ -44,14 +48,15 @@ Windows 下载地址: https://www.gyan.dev/ffmpeg/builds/#release-builds
     ]
   },
   "StreamOption": {
+    "ffmpegRoot": "/usr/lib/x86_64-linux-gnu/",     // ffmpeg shared library location, should contain `avcodec.dll` on Windows or `libavcodec.a` on Linux/Unix
+                                                    // This value is ffmpeg library location in pre-built docker image.
     "Url": "https://img.cdn.gaein.cn/fakelive.flv", // must set, live stream Uri, can be rtsp/rtmp/http
     "ConnectTimeout": 1200,                         // default 1200, in ms, timeout value for connect to stream url
     "CodecTimeout": 6000,                           // default 6000, in ms, timeout to decode or encode a frame
                                                     // NOTE: when set `KeyFrameOnly` to `true`, this option is timeout for the sum of decode all frame before keyframe
     "CodecThreads": 4,                              // default 8, threads to decode and encode
     "KeyFrameOnly": true,                           // only use keyframe in live stream, will cause high delay but better quality
-    "ffmpegRoot": "C:/Users/User/Tools/ffmpeg-7.0.2/bin",   // ffmpeg shared library location, should contain `avcodec.dll` on Windows or `libavcodec.a` on Linux/Unix
-    "LogLevel": "WARNING"
+    "LogLevel": "WARNING"   // will be deprecated.
   },
   "BotOption": {
     // KeyStore and DeviceInfo are located at ~/AppData/Local/IsolatedStorage/<random>\<random>\Url.<random>\AppFiles
