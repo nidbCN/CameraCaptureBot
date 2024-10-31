@@ -11,22 +11,11 @@ public class CodecBase(ILogger logger, BinarySizeFormatter binarySizeFormat) : I
 
     protected readonly unsafe AVPacket* Packet = ffmpeg.av_packet_alloc();
 
-    private static unsafe string BytePointerToString(byte* bytePtr)
-    {
-        // 计算字符串的长度
-        var length = 0;
-        while (*(bytePtr + length) != 0)
-            length++;
-
-        // 从指针创建字符串
-        return System.Text.Encoding.UTF8.GetString(new Span<byte>(bytePtr, length));
-    }
-
     public unsafe Queue<byte[]> Encode(AVFrame* frame)
     {
         using (logger.BeginScope(
                    "{codec}@0x{id:x16}.{func}",
-                   BytePointerToString(EncoderCtx->codec->name),
+                   ffmpeg.avcodec_get_name(EncoderCtx->codec_id),
                    (IntPtr)EncoderCtx,
                    nameof(Encode)))
         {

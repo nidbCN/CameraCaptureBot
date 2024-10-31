@@ -87,7 +87,7 @@ public sealed class CaptureService : IDisposable
         return ctx;
     }
     #endregion
-    
+
     public unsafe CaptureService(ILogger<CaptureService> logger, IOptions<StreamOption> option, FfmpegLibWebpEncoder encoder, BinarySizeFormatter formatter)
     {
         _logger = logger;
@@ -151,6 +151,52 @@ public sealed class CaptureService : IDisposable
 
         CloseInput();
         #endregion
+    }
+
+    private unsafe void CreateDecoderTest()
+    {
+        // 设置超时
+        AVDictionary* openOptions = null;
+        ffmpeg.av_dict_set(&openOptions, "timeout", _streamOption.ConnectTimeout.ToString(), 0);
+
+        OpenInput();
+
+        ffmpeg.avformat_find_stream_info(_inputFormatCtx, null)
+            .ThrowExceptionIfError();
+
+        // 匹配解码器信息
+        AVCodec* decoder = null;
+        var index = ffmpeg
+            .av_find_best_stream(_inputFormatCtx, AVMediaType.AVMEDIA_TYPE_VIDEO, -1, -1, &decoder, 0)
+            .ThrowExceptionIfError();
+
+        // 创建解码器
+        var dec = CreateCodecCtx(decoder, codec =>
+        {
+            ffmpeg.avcodec_parameters_to_context(codec.Value, _inputFormatCtx->streams[_streamIndex]->codecpar)
+                .ThrowExceptionIfError();
+
+            codec.Value->thread_count = (int)_streamOption.CodecThreads;
+            codec.Value->flags |= ffmpeg.AV_CODEC_FLAG_LOW_DELAY;
+
+            if (_streamOption.KeyFrameOnly)
+            {
+                codec.Value->skip_frame = AVDiscard.AVDISCARD_NONKEY;
+            }
+        });
+
+        var pixFormat = _decoderCtx->pix_fmt switch
+        {
+            AVPixelFormat.AV_PIX_FMT_YUVJ420P => AVPixelFormat.AV_PIX_FMT_YUV420P,
+            AVPixelFormat.AV_PIX_FMT_YUVJ422P => AVPixelFormat.AV_PIX_FMT_YUV422P,
+            AVPixelFormat.AV_PIX_FMT_YUVJ444P => AVPixelFormat.AV_PIX_FMT_YUV444P,
+            AVPixelFormat.AV_PIX_FMT_YUVJ440P => AVPixelFormat.AV_PIX_FMT_YUV440P,
+            _ => _decoderCtx->pix_fmt,
+        };
+
+        
+
+        CloseInput();
     }
 
     private unsafe void OpenInput()
@@ -426,7 +472,7 @@ public sealed class CaptureService : IDisposable
         do
         {
             result = ffmpeg.avcodec_receive_frame(_decoderCtx, _frame);
-            _logger.LogDebug("Drop frame {num} in decoder buffer.", _decoderCtx->frame_num);
+            _logger.LogDebug("Drop frame[{seq}] in decoder queue[{num}] in decoder buffer.", cnt, _decoderCtx->frame_num);
             cnt++;
         } while (result != ffmpeg.AVERROR(ffmpeg.EAGAIN));
 
