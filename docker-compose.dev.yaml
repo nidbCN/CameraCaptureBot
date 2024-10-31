@@ -1,0 +1,16 @@
+services:
+  CameraCaptureBot:
+    image: camera-capture-bot:test
+    tty: true
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./IsolatedStorage/:/root/.local/share/IsolatedStorage/
+    configs:
+      - source: appsettings
+        target: /app/appsettings.json
+    restart: unless-stopped
+
+configs:
+  appsettings:
+    file: ./CameraCaptureBot.Core/appsettings.json
