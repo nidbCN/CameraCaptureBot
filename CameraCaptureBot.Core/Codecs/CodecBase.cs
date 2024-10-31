@@ -14,7 +14,7 @@ public class CodecBase(ILogger logger, BinarySizeFormatter binarySizeFormat) : I
     public unsafe Queue<byte[]> Encode(AVFrame* frame)
     {
         using (logger.BeginScope(
-                   "{codec}@0x{id:x16}.{func}",
+                   "{name}@0x{aaddress:x16}.{func}",
                    ffmpeg.avcodec_get_name(EncoderCtx->codec_id),
                    (IntPtr)EncoderCtx,
                    nameof(Encode)))
@@ -25,7 +25,10 @@ public class CodecBase(ILogger logger, BinarySizeFormatter binarySizeFormat) : I
             EncoderCtx->height = frame->height;
             EncoderCtx->sample_aspect_ratio = frame->sample_aspect_ratio;
 
-            logger.LogDebug("Try send frame@0x{id:x16} to encoder.", frame->GetHashCode());
+            #region 发送
+            var scope = logger.BeginScope($"frame@0x{frame->GetHashCode():x8}");
+
+            logger.LogDebug("Try send frame to encoder.");
 
             var ret = ffmpeg.avcodec_send_frame(EncoderCtx, frame);
             if (ret < 0)
@@ -60,14 +63,18 @@ public class CodecBase(ILogger logger, BinarySizeFormatter binarySizeFormat) : I
                 throw exception;
             }
 
-            logger.LogInformation("Success sent frame@0x{id:x16} to decoder.", frame->GetHashCode());
+            logger.LogInformation("Success sent frame to decoder.");
             logger.LogDebug("If there's no another usage, this frame can be release now.");
+
+            scope?.Dispose();
+            #endregion
+            #region 接收
             logger.LogDebug("Try receive packet from decoder.");
 
             for (ret = ReceivePacket(); ret == 0 && Packet->size > 0; ret = ReceivePacket())
             {
-                logger.LogInformation("Received packet[{pos}] from decoder, size:{size}.",
-                    Packet->pos,
+                scope = logger.BeginScope($"packet@{Packet->buf->GetHashCode()}");
+                logger.LogInformation("Received packet from decoder, size:{size}.",
                     string.Format(binarySizeFormat, "{0}", Packet->size));
 
                 var buffer = new byte[Packet->size];
@@ -108,6 +115,8 @@ public class CodecBase(ILogger logger, BinarySizeFormatter binarySizeFormat) : I
                 throw exception;
             }
 
+            scope?.Dispose();
+            #endregion
             return linkedBuffer;
         }
     }

@@ -257,7 +257,7 @@ public sealed class CaptureService : IDisposable
     /// <returns></returns>
     public unsafe AVFrame* DecodeNextFrameUnsafe()
     {
-        using (_logger.BeginScope($"{ffmpeg.avcodec_get_name(_decoderCtx->codec_id)}@0x{_decoderCtx->GetHashCode():x8}"))
+        using (_logger.BeginScope($"{ffmpeg.avcodec_get_name(_decoderCtx->codec_id)}@0x{(IntPtr)_decoderCtx:x16}"))
         {
             var decodeResult = -1;
             var timeoutTokenSource = new CancellationTokenSource(
@@ -295,136 +295,137 @@ public sealed class CaptureService : IDisposable
                         readResult.ThrowExceptionIfError();
                     } while (_packet->stream_index != _streamIndex);
 
-                    using (_logger.BeginScope($"Packet@0x{_packet->buf->GetHashCode():x8}]"))
+                    var scope = _logger.BeginScope($"Packet@0x{_packet->buf->GetHashCode():x8}]");
+
+                    // 取到了 stream 中的包
+                    _logger.LogInformation(
+                        "Find packet in stream {index}, size:{size}, pts(display):{pts}, dts(decode):{dts}, key frame flag:{containsKey}",
+                        _packet->stream_index,
+                        string.Format(_formatter, "{0}", _packet->size),
+                        FfmpegTimeToTimeSpan(_packet->pts, _decoderCtx->time_base).ToString("c"),
+                        FfmpegTimeToTimeSpan(_packet->dts, _decoderCtx->time_base).ToString("c"),
+                        (_packet->flags & ffmpeg.AV_PKT_FLAG_KEY) == 1 ? ffmpeg.AV_PKT_FLAG_KEY.ToString() : "NO_FLAG"
+                    );
+
+                    // 空包
+                    if (_packet->size <= 0)
                     {
-                        // 取到了 stream 中的包
-                        _logger.LogInformation(
-                            "Find packet in stream {index}, size:{size}, pts(display):{pts}, dts(decode):{dts}, key frame flag:{containsKey}",
-                            _packet->stream_index,
-                            string.Format(_formatter, "{0}", _packet->size),
-                            FfmpegTimeToTimeSpan(_packet->pts, _decoderCtx->time_base).ToString("c"),
-                            FfmpegTimeToTimeSpan(_packet->dts, _decoderCtx->time_base).ToString("c"),
-                            (_packet->flags & ffmpeg.AV_PKT_FLAG_KEY) == 1 ? ffmpeg.AV_PKT_FLAG_KEY.ToString() : "NO_FLAG"
-                        );
+                        _logger.LogWarning("Packet with invalid size {size}, ignore.",
+                            string.Format(_formatter, "{0}", _packet->size));
+                    }
 
-                        // 空包
-                        if (_packet->size <= 0)
+                    // 校验关键帧
+                    if (_streamOption.KeyFrameOnly)
+                    {
+                        if ((_packet->flags & ffmpeg.AV_PKT_FLAG_KEY) == 0x00)
                         {
-                            _logger.LogWarning("Packet with invalid size {size}, ignore.",
-                                string.Format(_formatter, "{0}", _packet->size));
-                        }
-
-                        // 校验关键帧
-                        if (_streamOption.KeyFrameOnly)
-                        {
-                            if ((_packet->flags & ffmpeg.AV_PKT_FLAG_KEY) == 0x00)
-                            {
-                                _logger.LogInformation("Packet not contains KEY frame, {options} enabled, drop.", nameof(StreamOption.KeyFrameOnly));
-                                continue;
-                            }
-                        }
-
-                        // 校验 PTS
-                        if (_packet->pts < 0)
-                        {
-                            _logger.LogWarning("Packet pts={pts} < 0, drop.",
-                                FfmpegTimeToTimeSpan(_packet->pts, _decoderCtx->time_base).ToString("c"));
+                            _logger.LogInformation("Packet not contains KEY frame, {options} enabled, drop.", nameof(StreamOption.KeyFrameOnly));
                             continue;
                         }
+                    }
 
-                        // 尝试发送
-                        _logger.LogDebug("Try send packet to decoder.");
-                        var sendResult = ffmpeg.avcodec_send_packet(_decoderCtx, _packet);
+                    // 校验 PTS
+                    if (_packet->pts < 0)
+                    {
+                        _logger.LogWarning("Packet pts={pts} < 0, drop.",
+                            FfmpegTimeToTimeSpan(_packet->pts, _decoderCtx->time_base).ToString("c"));
+                        continue;
+                    }
 
-                        if (sendResult == ffmpeg.AVERROR(ffmpeg.EAGAIN))
+                    // 尝试发送
+                    _logger.LogDebug("Try send packet to decoder.");
+                    var sendResult = ffmpeg.avcodec_send_packet(_decoderCtx, _packet);
+
+                    if (sendResult == ffmpeg.AVERROR(ffmpeg.EAGAIN))
+                    {
+                        // reference:
+                        // * tree/release/6.1/fftools/ffmpeg_dec.c:567
+                        // 理论上不会出现 EAGAIN
+
+                        _logger.LogWarning(
+                            "Receive {error} after sent, this could be cause by ffmpeg bug or some reason, ignored this message.",
+                            nameof(ffmpeg.EAGAIN));
+                        sendResult = 0;
+                    }
+
+                    if (sendResult == 0 || sendResult == ffmpeg.AVERROR_EOF)
+                    {
+                        // 发送成功
+                        _logger.LogDebug("Packet sent success, try get decoded frame.");
+                        // 获取解码结果
+                        decodeResult = ffmpeg.avcodec_receive_frame(_decoderCtx, _frame);
+                    }
+                    else
+                    {
+                        var error = new ApplicationException(FfMpegExtension.av_strerror(sendResult));
+
+                        // 无法处理的发送失败
+                        _logger.LogError(error, "Send packet to decoder failed.\n");
+
+                        throw error;
+                    }
+
+                    scope?.Dispose();
+                    scope = _logger.BeginScope($"Frame@0x{_frame->GetHashCode():x8}");
+
+                    if (decodeResult < 0)
+                    {
+                        // 错误处理
+                        ApplicationException error;
+                        var message = FfMpegExtension.av_strerror(decodeResult);
+
+                        if (decodeResult == ffmpeg.AVERROR_EOF)
                         {
                             // reference:
-                            // * tree/release/6.1/fftools/ffmpeg_dec.c:567
-                            // 理论上不会出现 EAGAIN
+                            // * https://ffmpeg.org/doxygen/6.1/group__lavc__decoding.html#ga11e6542c4e66d3028668788a1a74217c
+                            // > the codec has been fully flushed, and there will be no more output frames
+                            // 理论上不会出现 EOF
+                            message =
+                                "the codec has been fully flushed, and there will be no more output frames.";
 
-                            _logger.LogWarning(
-                                "Receive {error} after sent, this could be cause by ffmpeg bug or some reason, ignored this message.",
-                                nameof(ffmpeg.EAGAIN));
-                            sendResult = 0;
+                            error = new(message);
+
+                            _logger.LogError(error, "Received EOF from decoder.\n");
                         }
-
-                        if (sendResult == 0 || sendResult == ffmpeg.AVERROR_EOF)
+                        else if (decodeResult == ffmpeg.AVERROR(ffmpeg.EAGAIN))
                         {
-                            // 发送成功
-                            _logger.LogDebug("Packet sent success, try get decoded frame.");
-                            // 获取解码结果
-                            decodeResult = ffmpeg.avcodec_receive_frame(_decoderCtx, _frame);
+                            // reference:
+                            // * tree/release/6.1/fftools/ffmpeg_dec.c:596
+                            // * https://ffmpeg.org/doxygen/6.1/group__lavc__decoding.html#ga11e6542c4e66d3028668788a1a74217c
+                            // > output is not available in this state - user must try to send new input
+                            // 理论上不会出现 EAGAIN
+                            message =
+                                "output is not available in this state - user must try to send new input";
+
+                            //if (_streamOption.KeyFrameOnly)
+                            //{
+                            //    // 抛出异常，仅关键帧模式中，该错误不可能通过发送更多需要的包来解决
+                            //    error = new(message);
+
+                            //    _logger.LogError(error, "Received EAGAIN from decoder.\n");
+                            //    throw error;
+                            //}
+
+                            // 忽略错误，发送下一个包进行编码，可能足够的包进入解码器可以解决
+                            _logger.LogWarning("Receive EAGAIN from decoder, retry.");
+                            continue;
                         }
                         else
                         {
-                            var error = new ApplicationException(FfMpegExtension.av_strerror(sendResult));
-
-                            // 无法处理的发送失败
-                            _logger.LogError(error, "Send packet to decoder failed.\n");
-
+                            error = new(message);
+                            _logger.LogError(error, "Uncaught error occured during decoding.\n");
                             throw error;
                         }
-
-                        using (_logger.BeginScope($"Frame@0x{_frame->data.GetHashCode():x8}"))
-                        {
-                            if (decodeResult < 0)
-                            {
-                                // 错误处理
-                                ApplicationException error;
-                                var message = FfMpegExtension.av_strerror(decodeResult);
-
-                                if (decodeResult == ffmpeg.AVERROR_EOF)
-                                {
-                                    // reference:
-                                    // * https://ffmpeg.org/doxygen/6.1/group__lavc__decoding.html#ga11e6542c4e66d3028668788a1a74217c
-                                    // > the codec has been fully flushed, and there will be no more output frames
-                                    // 理论上不会出现 EOF
-                                    message =
-                                        "the codec has been fully flushed, and there will be no more output frames.";
-
-                                    error = new(message);
-
-                                    _logger.LogError(error, "Received EOF from decoder.\n");
-                                }
-                                else if (decodeResult == ffmpeg.AVERROR(ffmpeg.EAGAIN))
-                                {
-                                    // reference:
-                                    // * tree/release/6.1/fftools/ffmpeg_dec.c:596
-                                    // * https://ffmpeg.org/doxygen/6.1/group__lavc__decoding.html#ga11e6542c4e66d3028668788a1a74217c
-                                    // > output is not available in this state - user must try to send new input
-                                    // 理论上不会出现 EAGAIN
-                                    message =
-                                        "output is not available in this state - user must try to send new input";
-
-                                    //if (_streamOption.KeyFrameOnly)
-                                    //{
-                                    //    // 抛出异常，仅关键帧模式中，该错误不可能通过发送更多需要的包来解决
-                                    //    error = new(message);
-
-                                    //    _logger.LogError(error, "Received EAGAIN from decoder.\n");
-                                    //    throw error;
-                                    //}
-
-                                    // 忽略错误，发送下一个包进行编码，可能足够的包进入解码器可以解决
-                                    _logger.LogWarning("Receive EAGAIN from decoder, retry.");
-                                    continue;
-                                }
-                                else
-                                {
-                                    error = new(message);
-                                    _logger.LogError(error, "Uncaught error occured during decoding.\n");
-                                    throw error;
-                                }
-                            }
-
-                            // 解码正常
-                            _logger.LogInformation("Decode frame success. type {type}, pts {pts}.",
-                                _frame->pict_type.ToString(),
-                                FfmpegTimeToTimeSpan(_frame->pts, _decoderCtx->time_base).ToString("c"));
-                        }
-
-                        break;
                     }
+
+                    // 解码正常
+                    _logger.LogInformation("Decode frame success. type {type}, pts {pts}.",
+                        _frame->pict_type.ToString(),
+                        FfmpegTimeToTimeSpan(_frame->pts, _decoderCtx->time_base).ToString("c"));
+
+                    scope?.Dispose();
+
+                    break;
                 }
                 finally
                 {
