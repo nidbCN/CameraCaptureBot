@@ -244,7 +244,7 @@ public sealed class CaptureService : IDisposable
                     using (_logger.BeginScope($"Packet[{_packet->pos}]"))
                     {
                         // 取到了 stream 中的包
-                        _logger.LogDebug(
+                        _logger.LogInformation(
                             "Find packet[{id}] in stream {index}, size:{size}, pts(display):{pts}, dts(decode):{dts}, key frame flag:{containsKey}",
                             _packet->pos,
                             _packet->stream_index,
