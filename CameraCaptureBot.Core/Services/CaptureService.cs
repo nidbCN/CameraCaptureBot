@@ -194,7 +194,7 @@ public sealed class CaptureService : IDisposable
             _ => _decoderCtx->pix_fmt,
         };
 
-        
+
 
         CloseInput();
     }
@@ -257,7 +257,7 @@ public sealed class CaptureService : IDisposable
     /// <returns></returns>
     public unsafe AVFrame* DecodeNextFrameUnsafe()
     {
-        using (_logger.BeginScope($"Decoder@0x{_decoderCtx->GetHashCode():x16}"))
+        using (_logger.BeginScope($"{ffmpeg.avcodec_get_name(_decoderCtx->codec_id)}@0x{_decoderCtx->GetHashCode():x16}"))
         {
             var decodeResult = -1;
             var timeoutTokenSource = new CancellationTokenSource(
