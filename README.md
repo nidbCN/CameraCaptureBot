@@ -43,10 +43,6 @@ Windows 下载地址: https://www.gyan.dev/ffmpeg/builds/#release-builds
       }
     }
   },
-  "BotConfig": {
-    "AllowGroups": [
-    ]
-  },
   "StreamOption": {
     "ffmpegRoot": "/usr/lib/x86_64-linux-gnu/",     // ffmpeg shared library location, should contain `avcodec.dll` on Windows or `libavcodec.a` on Linux/Unix
                                                     // This value is ffmpeg library location in pre-built docker image.
@@ -62,7 +58,13 @@ Windows 下载地址: https://www.gyan.dev/ffmpeg/builds/#release-builds
     // KeyStore and DeviceInfo are located at ~/AppData/Local/IsolatedStorage/<random>\<random>\Url.<random>\AppFiles
     "KeyStoreFile": "keystore.json",        // default keystore.json
     "DeviceInfoFile": "deviceInfo.json",    // default deviceInfo.json
-    
+
+    // group/friend qq number in un unisgned int
+    "AllowedGroups": null,          // default null, a list of allowed group, null for allow all
+    "AllowedFriends": null,         // default null, a list of allowed friend, null for allow all
+    "AdminAccounts": [],            // default empty, a list of admin friend
+    "NotifyAdminOnException": true  // default true, send error message to admin account when message process error
+
     "FrameworkConfig": {
       "AutoReconnect": true,        // default true
       "AutoReLogin": true,          // default true
