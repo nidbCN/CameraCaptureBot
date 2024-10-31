@@ -259,6 +259,7 @@ public sealed class CaptureService : IDisposable
     {
         using (_logger.BeginScope($"{ffmpeg.avcodec_get_name(_decoderCtx->codec_id)}@0x{(IntPtr)_decoderCtx:x16}"))
         {
+            IDisposable? scope = null;
             var decodeResult = -1;
             var timeoutTokenSource = new CancellationTokenSource(
                 TimeSpan.FromMilliseconds(_streamOption.CodecTimeout));
@@ -295,7 +296,9 @@ public sealed class CaptureService : IDisposable
                         readResult.ThrowExceptionIfError();
                     } while (_packet->stream_index != _streamIndex);
 
-                    var scope = _logger.BeginScope($"Packet@0x{_packet->buf->GetHashCode():x8}]");
+                    if (scope is not null)
+                        scope?.Dispose();
+                    scope = _logger.BeginScope($"Packet@0x{_packet->buf->GetHashCode():x8}");
 
                     // 取到了 stream 中的包
                     _logger.LogInformation(
