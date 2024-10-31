@@ -45,5 +45,9 @@ public static class ServiceCollectionExtension
             handler.DeleteFile(filename);
             return new();
         }
+        finally
+        {
+            handler.Close();
+        }
     }
 }
