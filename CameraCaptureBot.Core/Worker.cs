@@ -50,6 +50,88 @@ public class Worker(ILogger<Worker> logger,
         }
     }
 
+    private async Task SendErrorToAccounts(IList<uint> accounts, Exception e)
+        => await Parallel.ForEachAsync(accounts, async (account, token) =>
+        {
+            var msg = MessageBuilder
+                 .Friend(account)
+               .Text(e.Message + '\n' + e.StackTrace)
+            .Build();
+            await botCtx.SendMessage(msg);
+        });
+
+    private async Task ProcessMessage2(MessageChain message, BotContext thisBot)
+    {
+        var isGroup = message.GroupUin is not null;
+
+        var replyUin = message.FriendUin;
+        var allowedList = botOptions.Value.AllowedFriends;
+        var groupInfo = string.Empty;
+        var builderBuilder = MessageBuilder.Friend;
+
+        if (isGroup)
+        {
+            replyUin = message.GroupUin!.Value;
+            allowedList = botOptions.Value.AllowedGroups;
+            groupInfo = $".Group({message.GroupUin})";
+            builderBuilder = MessageBuilder.Group;
+        }
+
+        using (logger.BeginScope($"{nameof(BotContext)}{groupInfo}@{message.FriendUin}"))
+        {
+            try
+            {
+                var textMessages = message
+                    .Select(m => m as TextEntity)
+                    .Where(m => m != null);
+
+                if (!textMessages.Any(m => m!.Text.StartsWith("让我看看")))
+                    return;
+
+                logger.LogInformation("Received command `{msg}`.", message.ToPreviewString());
+
+                var messageBuiler = builderBuilder.Invoke(replyUin);
+
+                if (allowedList?.Contains(replyUin) ?? true)
+                {
+                    logger.LogInformation("Allowed user, send captured image.");
+                    await SendCaptureMessage(messageBuiler, thisBot);
+                }
+                else
+                {
+                    logger.LogWarning("UnAllowed user, reject.");
+                    await botCtx.SendMessage(messageBuiler.Text("杰哥，你...你干嘛啊（用户不在白名单）").Build());
+                }
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Failed to process message.");
+
+                if (botOptions.Value.NotifyAdminOnException)
+                {
+                    logger.LogInformation("{opt} enabled, send error message to admin accounts.",
+                            nameof(BotOption.NotifyAdminOnException));
+                    var admins = botOptions.Value.AdminAccounts;
+                    if (admins.Count == 0)
+                    {
+                        logger.LogWarning("No admin accounts has been configured, can not send message.");
+                    }
+                    else
+                    {
+                        try
+                        {
+                            await SendErrorToAccounts(admins, e);
+                        }
+                        catch (Exception sendError)
+                        {
+                            logger.LogError(sendError, "Unable to send message");
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private async Task ProcessMessage(MessageChain recMessage, BotContext thisBot, MessageBuilder sendMessage)
     {
         using (logger.BeginScope(nameof(BotContext) + "."
@@ -66,7 +148,7 @@ public class Worker(ILogger<Worker> logger,
                 if (!textMessages.Any(m => m!.Text.StartsWith("让我看看")))
                     return;
 
-                logger.LogInformation("Received {msg}, send captured image.", recMessage.ToPreviewString());
+                logger.LogInformation("Received command `{msg}`, send captured image.", recMessage.ToPreviewString());
                 await SendCaptureMessage(sendMessage, thisBot);
             }
             catch (Exception e)
@@ -80,7 +162,7 @@ public class Worker(ILogger<Worker> logger,
     {
         botCtx.Invoker.OnBotLogEvent += (_, @event) =>
         {
-            using (logger.BeginScope($"{nameof(BotContext)}"))
+            using (logger.BeginScope($"{nameof(Lagrange.Core.Event.EventArg.BotLogEvent)}"))
             {
                 logger.Log(@event.Level switch
                 {
@@ -91,7 +173,7 @@ public class Worker(ILogger<Worker> logger,
                     BotLogLevel.Exception => LogLevel.Error,
                     BotLogLevel.Fatal => LogLevel.Critical,
                     _ => throw new NotImplementedException(),
-                }, "[{time}]:{msg}", @event.EventTime, @event.EventMessage);
+                }, "event time:{time}, msg:'{msg}'", @event.EventTime.ToLocalTime(), @event.EventMessage);
             }
         };
 
@@ -146,19 +228,19 @@ public class Worker(ILogger<Worker> logger,
 
         botCtx.Invoker.OnGroupMessageReceived += async (bot, @event) =>
         {
-            await ProcessMessage(@event.Chain, bot, MessageBuilder.Group(@event.Chain.GroupUin!.Value));
+            await ProcessMessage2(@event.Chain, bot);
         };
 
         botCtx.Invoker.OnFriendMessageReceived += async (bot, @event) =>
         {
-            await ProcessMessage(@event.Chain, bot, MessageBuilder.Friend(@event.Chain.FriendUin));
+            await ProcessMessage2(@event.Chain, bot);
         };
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await StartUp.LoginAsync(botCtx, isoStorage, logger, botOptions.Value, stoppingToken);
         ConfigureEvents();
+        await StartUp.LoginAsync(botCtx, isoStorage, logger, botOptions.Value, stoppingToken);
     }
 
     public override Task StopAsync(CancellationToken cancellationToken)
