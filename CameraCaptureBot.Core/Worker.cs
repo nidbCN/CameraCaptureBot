@@ -164,6 +164,8 @@ public class Worker(ILogger<Worker> logger,
     public override Task StopAsync(CancellationToken cancellationToken)
     {
         botCtx.Dispose();
+        isoStorage.Close();
+        isoStorage.Dispose();
 
         return base.StopAsync(cancellationToken);
     }

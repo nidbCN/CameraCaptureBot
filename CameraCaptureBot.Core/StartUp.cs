@@ -1,13 +1,8 @@
 ﻿using CameraCaptureBot.Core.Configs;
 using Lagrange.Core;
 using Lagrange.Core.Common.Interface.Api;
-using System;
-using System.Collections.Generic;
 using System.IO.IsolatedStorage;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace CameraCaptureBot.Core;
 internal sealed class StartUp

@@ -27,6 +27,9 @@ public static class ServiceCollectionExtension
 
         var keyStore = ReadAsJsonOrDelete<BotKeystore>(isoStore, botOption.KeyStoreFile);
         services.AddSingleton(BotFactory.Create(botOption.FrameworkConfig, deviceInfo, keyStore));
+
+        isoStore.Close();
+        isoStore.Dispose();
     }
 
     private static T ReadAsJsonOrDelete<T>(IsolatedStorageFile handler, string filename) where T : new()
@@ -36,7 +39,7 @@ public static class ServiceCollectionExtension
 
         try
         {
-            var stream = handler.OpenFile(filename, FileMode.Open, FileAccess.Read);
+            using var stream = handler.OpenFile(filename, FileMode.Open, FileAccess.Read);
             return JsonSerializer.Deserialize<T>(stream) ?? new();
         }
         catch (Exception e)
@@ -44,10 +47,6 @@ public static class ServiceCollectionExtension
             Console.WriteLine(e);
             handler.DeleteFile(filename);
             return new();
-        }
-        finally
-        {
-            handler.Close();
         }
     }
 }
