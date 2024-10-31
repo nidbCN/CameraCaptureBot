@@ -257,7 +257,7 @@ public sealed class CaptureService : IDisposable
     /// <returns></returns>
     public unsafe AVFrame* DecodeNextFrameUnsafe()
     {
-        using (_logger.BeginScope($"{ffmpeg.avcodec_get_name(_decoderCtx->codec_id)}@0x{_decoderCtx->GetHashCode():x16}"))
+        using (_logger.BeginScope($"{ffmpeg.avcodec_get_name(_decoderCtx->codec_id)}@0x{_decoderCtx->GetHashCode():x8}"))
         {
             var decodeResult = -1;
             var timeoutTokenSource = new CancellationTokenSource(
@@ -295,7 +295,7 @@ public sealed class CaptureService : IDisposable
                         readResult.ThrowExceptionIfError();
                     } while (_packet->stream_index != _streamIndex);
 
-                    using (_logger.BeginScope($"Packet@0x{_packet->data->GetHashCode():x8}]"))
+                    using (_logger.BeginScope($"Packet@0x{_packet->buf->GetHashCode():x8}]"))
                     {
                         // 取到了 stream 中的包
                         _logger.LogInformation(
