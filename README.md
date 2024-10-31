@@ -79,5 +79,5 @@ Windows 下载地址: https://www.gyan.dev/ffmpeg/builds/#release-builds
 - [x] 优化 Bot 逻辑代码
 - [ ] 对识别到的人脸提供打码选项
 - [ ] 使用 ONNX Runtime 运行推理
-- [ ] 优化 .NET 通用主机代码，实现 `BotController` 等
+- [ ] 优化 .NET 泛型主机代码，实现 `BotController` 等
 - [ ] 优化编解码逻辑，实现 线程池+工厂 设计模式
