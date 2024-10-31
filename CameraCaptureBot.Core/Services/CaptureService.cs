@@ -39,8 +39,8 @@ public sealed class CaptureService : IDisposable
 
     public string StreamDecoderName { get; }
     public AVPixelFormat StreamPixelFormat { get; }
-    public int StreamHeight { get; }
-    public int StreamWidth { get; }
+    public int StreamHeight { get; private set; }
+    public int StreamWidth { get; private set; }
 
     #region 创建编码器
     /// <summary>
@@ -262,6 +262,14 @@ public sealed class CaptureService : IDisposable
             var decodeResult = -1;
             var timeoutTokenSource = new CancellationTokenSource(
                 TimeSpan.FromMilliseconds(_streamOption.CodecTimeout));
+
+            var codecpar = _inputFormatCtx->streams[_streamIndex]->codecpar;
+
+            _decoderCtx->width = codecpar->width;
+            _decoderCtx->height = codecpar->height;
+
+            StreamWidth = codecpar->width;
+            StreamHeight = codecpar->height;
 
             while (!timeoutTokenSource.Token.IsCancellationRequested)
             {
