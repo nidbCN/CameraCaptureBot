@@ -29,7 +29,6 @@ public static class ServiceCollectionExtension
         services.AddSingleton(BotFactory.Create(botOption.FrameworkConfig, deviceInfo, keyStore));
 
         isoStore.Close();
-        isoStore.Dispose();
     }
 
     private static T ReadAsJsonOrDelete<T>(IsolatedStorageFile handler, string filename) where T : new()

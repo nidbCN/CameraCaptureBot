@@ -14,7 +14,7 @@ public class CodecBase(ILogger logger, BinarySizeFormatter binarySizeFormat) : I
     public unsafe Queue<byte[]> Encode(AVFrame* frame)
     {
         using (logger.BeginScope(
-                   "{name}@0x{aaddress:x16}.{func}",
+                   "{name}@0x{address:x16}.{func}",
                    ffmpeg.avcodec_get_name(EncoderCtx->codec_id),
                    (IntPtr)EncoderCtx,
                    nameof(Encode)))

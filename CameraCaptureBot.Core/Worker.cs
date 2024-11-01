@@ -77,84 +77,61 @@ public class Worker(ILogger<Worker> logger,
             builderBuilder = MessageBuilder.Group;
         }
 
-        using (logger.BeginScope($"{nameof(BotContext)}{groupInfo}@{message.FriendUin}"))
+        var scope = logger.BeginScope($"{nameof(BotContext)}{groupInfo}@{message.FriendUin}");
+
+        try
         {
-            try
+            var textMessages = message
+                .Select(m => m as TextEntity)
+                .Where(m => m != null);
+
+            if (!textMessages.Any(m => m!.Text.StartsWith("让我看看")))
+                return;
+
+            logger.LogInformation("Received command `{msg}`.", message.ToPreviewString());
+
+            var messageBuilder = builderBuilder.Invoke(replyUin);
+
+            if (allowedList?.Contains(replyUin) ?? true)
             {
-                var textMessages = message
-                    .Select(m => m as TextEntity)
-                    .Where(m => m != null);
-
-                if (!textMessages.Any(m => m!.Text.StartsWith("让我看看")))
-                    return;
-
-                logger.LogInformation("Received command `{msg}`.", message.ToPreviewString());
-
-                var messageBuiler = builderBuilder.Invoke(replyUin);
-
-                if (allowedList?.Contains(replyUin) ?? true)
-                {
-                    logger.LogInformation("Allowed user, send captured image.");
-                    await SendCaptureMessage(messageBuiler, thisBot);
-                }
-                else
-                {
-                    logger.LogWarning("UnAllowed user, reject.");
-                    await botCtx.SendMessage(messageBuiler.Text("杰哥，你...你干嘛啊（用户不在白名单）").Build());
-                }
+                logger.LogInformation("Allowed user, send captured image.");
+                await SendCaptureMessage(messageBuilder, thisBot);
             }
-            catch (Exception e)
+            else
             {
-                logger.LogError(e, "Failed to process message.");
+                logger.LogWarning("UnAllowed user, reject.");
+                await botCtx.SendMessage(messageBuilder.Text("杰哥，你...你干嘛啊（用户不在白名单）").Build());
+            }
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Failed to process message.");
 
-                if (botOptions.Value.NotifyAdminOnException)
+            if (!botOptions.Value.NotifyAdminOnException)
+                return;
+
+            logger.LogInformation("{opt} enabled, send error message to admin accounts.",
+                nameof(BotOption.NotifyAdminOnException));
+            var admins = botOptions.Value.AdminAccounts;
+            if (admins.Count == 0)
+            {
+                logger.LogWarning("No admin accounts has been configured, can not send message.");
+            }
+            else
+            {
+                try
                 {
-                    logger.LogInformation("{opt} enabled, send error message to admin accounts.",
-                            nameof(BotOption.NotifyAdminOnException));
-                    var admins = botOptions.Value.AdminAccounts;
-                    if (admins.Count == 0)
-                    {
-                        logger.LogWarning("No admin accounts has been configured, can not send message.");
-                    }
-                    else
-                    {
-                        try
-                        {
-                            await SendErrorToAccounts(admins, e);
-                        }
-                        catch (Exception sendError)
-                        {
-                            logger.LogError(sendError, "Unable to send message");
-                        }
-                    }
+                    await SendErrorToAccounts(admins, e);
+                }
+                catch (Exception sendError)
+                {
+                    logger.LogError(sendError, "Unable to send message");
                 }
             }
         }
-    }
-
-    private async Task ProcessMessage(MessageChain recMessage, BotContext thisBot, MessageBuilder sendMessage)
-    {
-        using (logger.BeginScope(nameof(BotContext) + "."
-                                 + (recMessage.GroupUin is null
-                   ? "Friend@" + recMessage.FriendUin
-                   : "Group@" + recMessage.GroupUin)))
+        finally
         {
-            try
-            {
-                var textMessages = recMessage
-                    .Select(m => m as TextEntity)
-                    .Where(m => m != null);
-
-                if (!textMessages.Any(m => m!.Text.StartsWith("让我看看")))
-                    return;
-
-                logger.LogInformation("Received command `{msg}`, send captured image.", recMessage.ToPreviewString());
-                await SendCaptureMessage(sendMessage, thisBot);
-            }
-            catch (Exception e)
-            {
-                logger.LogError(e, "Failed to process message.");
-            }
+            scope?.Dispose();
         }
     }
 
