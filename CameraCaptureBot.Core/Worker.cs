@@ -51,7 +51,7 @@ public class Worker(ILogger<Worker> logger,
     }
 
     private async Task SendErrorToAccounts(IList<uint> accounts, Exception e)
-        => await Parallel.ForEachAsync(accounts, async (account, token) =>
+        => await Parallel.ForEachAsync(accounts, async (account, _) =>
         {
             var msg = MessageBuilder
                  .Friend(account)
@@ -60,7 +60,7 @@ public class Worker(ILogger<Worker> logger,
             await botCtx.SendMessage(msg);
         });
 
-    private async Task ProcessMessage2(MessageChain message, BotContext thisBot)
+    private async Task ProcessMessage(MessageChain message, BotContext thisBot)
     {
         var isGroup = message.GroupUin is not null;
 
@@ -203,14 +203,19 @@ public class Worker(ILogger<Worker> logger,
             logger.LogInformation("Login Success! Bot online.");
         };
 
+        botCtx.Invoker.OnBotOfflineEvent += (_, _) =>
+        {
+            logger.LogError("Bot offline.");
+        };
+
         botCtx.Invoker.OnGroupMessageReceived += async (bot, @event) =>
         {
-            await ProcessMessage2(@event.Chain, bot);
+            await ProcessMessage(@event.Chain, bot);
         };
 
         botCtx.Invoker.OnFriendMessageReceived += async (bot, @event) =>
         {
-            await ProcessMessage2(@event.Chain, bot);
+            await ProcessMessage(@event.Chain, bot);
         };
     }
 
