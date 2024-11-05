@@ -65,6 +65,18 @@ Windows 下载地址: https://www.gyan.dev/ffmpeg/builds/#release-builds
     "AdminAccounts": [],            // default empty, a list of admin friend
     "NotifyAdminOnException": true  // default true, send error message to admin account when message process error
 
+    "NotificationConfig":{
+        "NotifyAdminOnException": true;
+        "NotifyWebhookOnException": false;
+        "NotifyAdminOnHeartbeat": false;
+        "NotifyWebhookOnHeartbeat": false;
+        "HeartbeatIntervalHour": 6;
+        "WebhookUrl": "https://notification.example/api/notifications?id=12345678"
+        "WebhookHeaders":[
+            {"X-Webhook-Token": "abcd-efgh"}
+        ]
+    }
+
     "FrameworkConfig": {
       "AutoReconnect": true,        // default true
       "AutoReLogin": true,          // default true
@@ -88,3 +100,5 @@ Windows 下载地址: https://www.gyan.dev/ffmpeg/builds/#release-builds
 - [ ] 使用 ONNX Runtime 运行推理
 - [ ] 优化 .NET 泛型主机代码，实现 `BotController` 等
 - [ ] 优化编解码逻辑，实现 线程池+工厂 设计模式
+- [ ] 优化 StarUp，使用 HostedService
+- [ ] 优化 Notification，创建 LoggerProvider
