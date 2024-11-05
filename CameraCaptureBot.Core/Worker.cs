@@ -6,6 +6,7 @@ using Lagrange.Core;
 using Lagrange.Core.Common.Interface.Api;
 using Lagrange.Core.Message;
 using Lagrange.Core.Message.Entity;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using BotLogLevel = Lagrange.Core.Event.EventArg.LogLevel;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
@@ -18,6 +19,8 @@ public class Worker(ILogger<Worker> logger,
     IsolatedStorageFile isoStorage,
     IOptions<BotOption> botOptions) : BackgroundService
 {
+    private readonly HttpClient _httpClient = new();
+
     private async Task SendCaptureMessage(MessageBuilder message, BotContext thisBot)
     {
         try
@@ -198,14 +201,25 @@ public class Worker(ILogger<Worker> logger,
             }
         };
 
-        botCtx.Invoker.OnBotOnlineEvent += (_, _) =>
+        botCtx.Invoker.OnBotOnlineEvent += async (bot, @event) =>
         {
-            logger.LogInformation("Login Success! Bot online.");
+            logger.LogInformation("Login Success! Bot {id} online.", bot.BotUin);
+
+            if (botOptions.Value.NotificationConfig.NotifyWebhookOnHeartbeat)
+            {
+                await _httpClient.PostAsync(botOptions.Value.NotificationConfig.WebhookUrl,
+                    new StringContent(@$"Time: `{@event.EventTime}`, Bot `{bot.BotUin}` online\."));
+            }
         };
 
-        botCtx.Invoker.OnBotOfflineEvent += (_, _) =>
+        botCtx.Invoker.OnBotOfflineEvent += async (bot, @event) =>
         {
             logger.LogError("Bot offline.");
+            if (botOptions.Value.NotificationConfig.NotifyWebhookOnHeartbeat)
+            {
+                await _httpClient.PostAsync(botOptions.Value.NotificationConfig.WebhookUrl,
+                    new StringContent(@$"Time: `{@event.EventTime}`, Bot `{bot.BotUin}` offline, msg: {@event.Message.Replace(".", @"\.")}\."));
+            }
         };
 
         botCtx.Invoker.OnGroupMessageReceived += async (bot, @event) =>
@@ -222,7 +236,6 @@ public class Worker(ILogger<Worker> logger,
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var startTime = DateTime.Now;
-        var client = new HttpClient();
 
         ConfigureEvents();
         await StartUp.LoginAsync(botCtx, isoStorage, logger, botOptions.Value, stoppingToken);
@@ -233,12 +246,12 @@ public class Worker(ILogger<Worker> logger,
             var url = botOptions.Value.NotificationConfig.WebhookUrl;
             var headers = botOptions.Value.NotificationConfig.WebhookHeaders;
 
+            await Task.Delay(TimeSpan.FromHours(botOptions.Value.NotificationConfig.HeartbeatIntervalHour), stoppingToken);
+
             if (url is not null)
             {
-                await client.PostAsync(url, new StringContent($@"Time: `{DateTime.Now:s}`, Msg: {nameof(CameraCaptureBot)} alive\."), stoppingToken);
+                await _httpClient.PostAsync(url, new StringContent($@"Time: `{DateTime.Now:s}`, Msg: {nameof(CameraCaptureBot)} alive\."), stoppingToken);
             }
-
-            await Task.Delay(TimeSpan.FromHours(botOptions.Value.NotificationConfig.HeartbeatIntervalHour), stoppingToken);
         }
     }
 
