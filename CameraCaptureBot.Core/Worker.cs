@@ -107,11 +107,11 @@ public class Worker(ILogger<Worker> logger,
         {
             logger.LogError(e, "Failed to process message.");
 
-            if (!botOptions.Value.NotifyAdminOnException)
+            if (!botOptions.Value.NotificationConfig.NotifyAdminOnException)
                 return;
 
             logger.LogInformation("{opt} enabled, send error message to admin accounts.",
-                nameof(BotOption.NotifyAdminOnException));
+                nameof(BotOption.NotificationConfig.NotifyAdminOnException));
             var admins = botOptions.Value.AdminAccounts;
             if (admins.Count == 0)
             {
@@ -221,8 +221,25 @@ public class Worker(ILogger<Worker> logger,
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        var startTime = DateTime.Now;
+        var client = new HttpClient();
+
         ConfigureEvents();
         await StartUp.LoginAsync(botCtx, isoStorage, logger, botOptions.Value, stoppingToken);
+
+        while (botOptions.Value.NotificationConfig.NotifyWebhookOnHeartbeat
+               && !stoppingToken.IsCancellationRequested)
+        {
+            var url = botOptions.Value.NotificationConfig.WebhookUrl;
+            var headers = botOptions.Value.NotificationConfig.WebhookHeaders;
+
+            if (url is not null)
+            {
+                await client.PostAsync(url, new StringContent($@"Time: `{DateTime.Now:s}`, Msg: {nameof(CameraCaptureBot)} alive\."), stoppingToken);
+            }
+
+            await Task.Delay(TimeSpan.FromHours(botOptions.Value.NotificationConfig.HeartbeatIntervalHour), stoppingToken);
+        }
     }
 
     public override Task StopAsync(CancellationToken cancellationToken)

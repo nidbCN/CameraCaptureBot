@@ -10,7 +10,9 @@ public record BotOption
     public IList<uint>? AllowedGroups { get; set; } = null;
     public IList<uint>? AllowedFriends { get; set; } = null;
     public IList<uint> AdminAccounts { get; set; } = [];
-    public bool NotifyAdminOnException { get; set; } = true;
+
+    public NotificationConfig NotificationConfig { get; set; } = new();
+
 
     public BotConfig FrameworkConfig { get; set; } = new()
     {
@@ -20,4 +22,15 @@ public record BotOption
         Protocol = Protocols.Linux,
         UseIPv6Network = true,
     };
+}
+
+public record NotificationConfig
+{
+    public bool NotifyAdminOnException { get; set; } = true;
+    public bool NotifyWebhookOnException { get; set; } = false;
+    public bool NotifyAdminOnHeartbeat { get; set; } = false;
+    public bool NotifyWebhookOnHeartbeat { get; set; } = false;
+    public uint HeartbeatIntervalHour { get; set; } = 6;
+    public Uri? WebhookUrl { get; set; }
+    public IDictionary<string, string?>? WebhookHeaders { get; set; }
 }
