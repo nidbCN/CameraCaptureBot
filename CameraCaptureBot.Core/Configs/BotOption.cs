@@ -13,7 +13,6 @@ public record BotOption
 
     public NotificationConfig NotificationConfig { get; set; } = new();
 
-
     public BotConfig FrameworkConfig { get; set; } = new()
     {
         AutoReconnect = true,

@@ -215,11 +215,13 @@ public class Worker(ILogger<Worker> logger,
         botCtx.Invoker.OnBotOfflineEvent += async (bot, @event) =>
         {
             logger.LogError("Bot offline.");
-            if (botOptions.Value.NotificationConfig.NotifyWebhookOnHeartbeat)
-            {
-                await _httpClient.PostAsync(botOptions.Value.NotificationConfig.WebhookUrl,
-                    new StringContent(@$"Time: `{@event.EventTime}`, Bot `{bot.BotUin}` offline, msg: {@event.Message.Replace(".", @"\.")}\."));
-            }
+         
+            if (!botOptions.Value.NotificationConfig.NotifyWebhookOnHeartbeat) return;
+            
+            logger.LogWarning("{option} set true, send HTTP POST to webhook.",
+                nameof(botOptions.Value.NotificationConfig.NotifyWebhookOnHeartbeat));
+            await _httpClient.PostAsync(botOptions.Value.NotificationConfig.WebhookUrl,
+                new StringContent(@$"Time: `{@event.EventTime}`, Bot `{bot.BotUin}` offline, msg: {@event.Message.Replace(".", @"\.")}\."));
         };
 
         botCtx.Invoker.OnGroupMessageReceived += async (bot, @event) =>
