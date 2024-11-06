@@ -52,7 +52,7 @@ Windows 下载地址: https://www.gyan.dev/ffmpeg/builds/#release-builds
                                                     // NOTE: when set `KeyFrameOnly` to `true`, this option is timeout for the sum of decode all frame before keyframe
     "CodecThreads": 4,                              // default 8, threads to decode and encode
     "KeyFrameOnly": true,                           // only use keyframe in live stream, will cause high delay but better quality
-    "LogLevel": "WARNING"   // will be deprecated.
+    "LogLevel": "WARNING"   // will be deprecated and merge into Logging.
   },
   "BotOption": {
     // KeyStore and DeviceInfo are located at ~/AppData/Local/IsolatedStorage/<random>\<random>\Url.<random>\AppFiles
@@ -63,19 +63,19 @@ Windows 下载地址: https://www.gyan.dev/ffmpeg/builds/#release-builds
     "AllowedGroups": null,          // default null, a list of allowed group, null for allow all
     "AllowedFriends": null,         // default null, a list of allowed friend, null for allow all
     "AdminAccounts": [],            // default empty, a list of admin friend
-    "NotifyAdminOnException": true  // default true, send error message to admin account when message process error
-
+    
     "NotificationConfig":{
-        "NotifyAdminOnException": true;
-        "NotifyWebhookOnException": false;
-        "NotifyAdminOnHeartbeat": false;
-        "NotifyWebhookOnHeartbeat": false;
-        "HeartbeatIntervalHour": 6;
-        "WebhookUrl": "https://notification.example/api/notifications?id=12345678"
+        "NotifyAdminOnException": true, // default true, send error message to admin account when message process error
+        "NotifyWebhookOnException": false,
+        "NotifyAdminOnHeartbeat": false,
+        "NotifyWebhookOnHeartbeat": false,
+        "HeartbeatIntervalHour": 6,
+        "WebhookUrl": "https://notification.example/api/notifications?id=12345678",
         "WebhookHeaders":[
-            {"X-Webhook-Token": "abcd-efgh"}
+            { "X-Webhook-Token": "abcd-efgh" },
+            { "Authorization": "Bearer abcd-efgh" }
         ]
-    }
+    },
 
     "FrameworkConfig": {
       "AutoReconnect": true,        // default true

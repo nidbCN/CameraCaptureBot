@@ -1,0 +1,149 @@
+{
+    "$schema": "https://json-schema.org/draft-07/schema#",
+    "title": "Product",
+    "description": "CameraCaptureBot appsettings.",
+    "type": "object",
+    "properties": {
+        "StreamOption": {
+            "description": "live stream and de/encode configurations.",
+            "type": "object",
+            "properties": {
+                "ffmpegRoot": {
+                    "description": "ffmpeg shared library location, should contain `avcodec.dll` on Windows or `libavcodec.a` on Linux/Unix. This value is ffmpeg library location in pre-built docker image.",
+                    "type": "string"
+                },
+                "Url": {
+                    "description": "live stream Uri, can be rtsp/rtmp/http... etc, support all format that your ffmpeg build supported.",
+                    "type": "string"
+                },
+                "ConnectTimeout": {
+                    "description": "default 1200, in ms, timeout value for connect to stream url",
+                    "type": "integer"
+                },
+                "CodecTimeout": {
+                    "description": "default 6000, in ms, timeout to decode or encode a frame",
+                    "type": "integer"
+                },
+                "CodecThreads": {
+                    "description": "recommend `<cpus>`, default 8, threads to decode and encode",
+                    "type": "integer"
+                },
+                "LogLevel": {
+                    "description": "this option will be merged to Logging",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "ffmpegRoot",
+                "Url"
+            ]
+        },
+        "BotOption": {
+            "description": "tencent qq bot configurations.",
+            "type": "object",
+            "properties": {
+                "KeyStoreFile": {
+                    "description": "default keystore.json, located at located at `~/AppData/Local/IsolatedStorage/<random>/<random>/Url.<random>/AppFiles` on windows or `~/.local/share/IsolatedStorage/` on Lin/Unix",
+                    "type": "string"
+                },
+                "DeviceInfoFile": {
+                    "description": "default deviceInfo.json, located as same as `KeyStoreFile`",
+                    "type": "string"
+                },
+                "AllowedGroups": {
+                    "description": "allowed groups, `null` for enable all, `[]` for disable all.",
+                    "type": "array",
+                    "items": {
+                        "description": "group number",
+                        "type": "integer",
+                        "minimum": 0
+                    }
+                },
+                "AllowedFriends": {
+                    "description": "allowed friends, `null` for enable all, `[]` for disable all.",
+                    "type": "array",
+                    "items": {
+                        "description": "friend number",
+                        "type": "integer",
+                        "minimum": 0
+                    }
+                },
+                "AdminAccounts": {
+                    "description": "admin accounts, `null` or `[]` for no admin.",
+                    "type": "array",
+                    "items": {
+                        "description": "friend number",
+                        "type": "integer",
+                        "minimum": 0
+                    }
+                },
+                "NotificationConfig": {
+                    "type": "object",
+                    "properties": {
+                        "NotifyAdminOnException": {
+                            "description": "default `true`.",
+                            "type": "boolean"
+                        },
+                        "NotifyWebhookOnException": {
+                            "description": "default `false`.",
+                            "type": "boolean"
+                        },
+                        "NotifyAdminOnHeartbeat": {
+                            "description": "default `false`.",
+                            "type": "boolean"
+                        },
+                        "NotifyWebhookOnHeartbeat": {
+                            "description": "default `false`.",
+                            "type": "boolean"
+                        },
+                        "HeartbeatIntervalHour": {
+                            "description": "default `6`, in hour.",
+                            "type": "integer",
+                            "minimum": 0
+                        },
+                        "WebhookUrl": {
+                            "description": "webhook url, required when will `NotifyWebhookOn*` on. send HTTP POST to this url.",
+                            "type": "string"
+                        },
+                        "WebhookHeaders": {
+                            "description": "webhook request header.",
+                            "type": "array",
+                            "items": {
+                                "type": "object"
+                            }
+                        }
+                    },
+                    "required": []
+                },
+                "FrameworkConfig": {
+                    "description": "qq bot framework config, see https://lagrangedev.github.io/Lagrange.Doc/Lagrange.Core/CreateBot/#botconfig-%E9%85%8D%E7%BD%AE%E7%B1%BB",
+                    "type": "object",
+                    "properties": {
+                        "AutoReconnect": {
+                            "type": "boolean"
+                        },
+                        "AutoReLogin": {
+                            "type": "boolean"
+                        },
+                        "UseIPv6Network": {
+                            "type": "boolean"
+                        },
+                        "GetOptimumServer": {
+                            "type": "boolean"
+                        },
+                        "Protocol": {
+                            "type": "integer"
+                        }
+                    },
+                    "additionalProperties": true,
+                    "required": []
+                }
+            },
+            "required": []
+        }
+    },
+    "required": [
+        "StreamOption",
+        "BotOption"
+    ]
+}
