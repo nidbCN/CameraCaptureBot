@@ -9,8 +9,4 @@ public record StreamOption
 
     public uint CodecTimeout { get; set; } = 5000;
     public uint CodecThreads { get; set; } = 4;
-    public bool KeyFrameOnly { get; set; } = true;
-    public uint KeyframeSearchMax { get; set; } = 60;
-
-    public string? LogLevel { get; set; }
 }

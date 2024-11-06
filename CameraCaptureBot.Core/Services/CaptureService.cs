@@ -127,11 +127,7 @@ public sealed class CaptureService : IDisposable
 
             codec.Value->thread_count = (int)_streamOption.CodecThreads;
             codec.Value->flags |= ffmpeg.AV_CODEC_FLAG_LOW_DELAY;
-
-            if (_streamOption.KeyFrameOnly)
-            {
-                codec.Value->skip_frame = AVDiscard.AVDISCARD_NONKEY;
-            }
+            codec.Value->skip_frame = AVDiscard.AVDISCARD_NONKEY;
         });
 
         var pixFormat = _decoderCtx->pix_fmt switch
@@ -151,52 +147,6 @@ public sealed class CaptureService : IDisposable
 
         CloseInput();
         #endregion
-    }
-
-    private unsafe void CreateDecoderTest()
-    {
-        // 设置超时
-        AVDictionary* openOptions = null;
-        ffmpeg.av_dict_set(&openOptions, "timeout", _streamOption.ConnectTimeout.ToString(), 0);
-
-        OpenInput();
-
-        ffmpeg.avformat_find_stream_info(_inputFormatCtx, null)
-            .ThrowExceptionIfError();
-
-        // 匹配解码器信息
-        AVCodec* decoder = null;
-        var index = ffmpeg
-            .av_find_best_stream(_inputFormatCtx, AVMediaType.AVMEDIA_TYPE_VIDEO, -1, -1, &decoder, 0)
-            .ThrowExceptionIfError();
-
-        // 创建解码器
-        var dec = CreateCodecCtx(decoder, codec =>
-        {
-            ffmpeg.avcodec_parameters_to_context(codec.Value, _inputFormatCtx->streams[_streamIndex]->codecpar)
-                .ThrowExceptionIfError();
-
-            codec.Value->thread_count = (int)_streamOption.CodecThreads;
-            codec.Value->flags |= ffmpeg.AV_CODEC_FLAG_LOW_DELAY;
-
-            if (_streamOption.KeyFrameOnly)
-            {
-                codec.Value->skip_frame = AVDiscard.AVDISCARD_NONKEY;
-            }
-        });
-
-        var pixFormat = _decoderCtx->pix_fmt switch
-        {
-            AVPixelFormat.AV_PIX_FMT_YUVJ420P => AVPixelFormat.AV_PIX_FMT_YUV420P,
-            AVPixelFormat.AV_PIX_FMT_YUVJ422P => AVPixelFormat.AV_PIX_FMT_YUV422P,
-            AVPixelFormat.AV_PIX_FMT_YUVJ444P => AVPixelFormat.AV_PIX_FMT_YUV444P,
-            AVPixelFormat.AV_PIX_FMT_YUVJ440P => AVPixelFormat.AV_PIX_FMT_YUV440P,
-            _ => _decoderCtx->pix_fmt,
-        };
-
-
-
-        CloseInput();
     }
 
     private unsafe void OpenInput()
@@ -309,13 +259,10 @@ public sealed class CaptureService : IDisposable
                     }
 
                     // 校验关键帧
-                    if (_streamOption.KeyFrameOnly)
+                    if ((_packet->flags & ffmpeg.AV_PKT_FLAG_KEY) == 0x00)
                     {
-                        if ((_packet->flags & ffmpeg.AV_PKT_FLAG_KEY) == 0x00)
-                        {
-                            _logger.LogInformation("Packet not contains KEY frame, {options} enabled, drop.", nameof(StreamOption.KeyFrameOnly));
-                            continue;
-                        }
+                        _logger.LogInformation("Packet not contains KEY frame, drop.");
+                        continue;
                     }
 
                     // 校验 PTS

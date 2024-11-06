@@ -1,5 +1,4 @@
 ﻿using System.Runtime.InteropServices;
-using CameraCaptureBot.Core.Configs;
 using FFmpeg.AutoGen;
 using Microsoft.Extensions.Options;
 
@@ -12,25 +11,21 @@ public class FfmpegLoggerService
 
     private readonly ILogger<FfmpegLoggerService> _logger;
 
-    public FfmpegLoggerService(ILogger<FfmpegLoggerService> logger, IOptions<StreamOption> streamOptions)
+    public FfmpegLoggerService(ILogger<FfmpegLoggerService> logger, IOptions<LoggerFilterOptions> loggerOptions)
     {
         _logger = logger;
-        var streamOption = streamOptions.Value;
 
         // 设置日志
-        if (streamOption.LogLevel is null) return;
-
-        var level = streamOption.LogLevel.ToUpper() switch
+        var level = loggerOptions.Value.MinLevel switch
         {
-            "TRACE" => ffmpeg.AV_LOG_TRACE,
-            "VERBOSE" => ffmpeg.AV_LOG_VERBOSE,
-            "DEBUG" => ffmpeg.AV_LOG_DEBUG,
-            "INFO" => ffmpeg.AV_LOG_INFO,
-            "WARNING" => ffmpeg.AV_LOG_WARNING,
-            "ERROR" => ffmpeg.AV_LOG_ERROR,
-            "FATAL" => ffmpeg.AV_LOG_FATAL,
-            "PANIC" => ffmpeg.AV_LOG_PANIC,
-            _ => ffmpeg.AV_LOG_INFO,
+            LogLevel.Trace => ffmpeg.AV_LOG_TRACE,
+            LogLevel.Debug => ffmpeg.AV_LOG_DEBUG,
+            LogLevel.Information => ffmpeg.AV_LOG_INFO,
+            LogLevel.Warning => ffmpeg.AV_LOG_WARNING,
+            LogLevel.Error => ffmpeg.AV_LOG_ERROR,
+            LogLevel.Critical => ffmpeg.AV_LOG_PANIC,
+            LogLevel.None => ffmpeg.AV_LOG_QUIET,
+            _ => ffmpeg.AV_LOG_INFO
         };
 
         unsafe
@@ -85,7 +80,7 @@ public class FfmpegLoggerService
                     _logger.LogTrace("{msg}", line);
                     break;
                 default:
-                    _logger.LogWarning("[level {level}]{msg}", level, line);
+                    _logger.LogWarning("Log unknown level:{level}, msg: {msg}", level, line);
                     break;
             }
 
