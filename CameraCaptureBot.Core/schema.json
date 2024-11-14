@@ -9,7 +9,7 @@
             "type": "object",
             "properties": {
                 "ffmpegRoot": {
-                    "description": "ffmpeg shared library location, should contain `avcodec.dll` on Windows or `libavcodec.a` on Linux/Unix. This value is ffmpeg library location in pre-built docker image.",
+                    "description": "ffmpeg shared library location, should contain `avcodec.dll` on Windows or `libavcodec.a` on Linux/Unix. Use \"\" on Linux for system default search locations(see `man dlopen`).",
                     "type": "string"
                 },
                 "Url": {

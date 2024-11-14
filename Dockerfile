@@ -25,7 +25,16 @@ USER root
 RUN apt update && \
     sed -i '/^Suites:.*bookworm[^-]/ s/$/ testing/' /etc/apt/sources.list.d/debian.sources && \
     apt update && \
-    apt install -y ffmpeg -t testing
+    apt install -y -t testing \ 
+        libatomic1 \
+        libavcodec60 \
+        libavdevice60 \
+        libavfilter10 \
+        libavformat60 \
+        libavutil58 \
+        libpostproc57 \
+        libswresample4 \
+        libswscale7
 
 FROM ffmpeg AS final
 WORKDIR /app

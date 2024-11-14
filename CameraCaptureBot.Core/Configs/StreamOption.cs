@@ -2,7 +2,7 @@
 
 public record StreamOption
 {
-    public required string FfmpegRoot { get; set; }
+    public string? FfmpegRoot { get; set; } = null;
 
     public required Uri Url { get; set; }
     public uint ConnectTimeout { get; set; } = 1200;

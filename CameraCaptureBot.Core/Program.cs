@@ -45,10 +45,10 @@ static void ConfigureFfMpeg(ILogger logger, StreamOption config)
 {
     ArgumentNullException.ThrowIfNull(config);
 
-    logger.LogInformation("Bind ffmpeg root path to {path}.", ffmpeg.RootPath);
+    if (config.FfmpegRoot is not null)
+        ffmpeg.RootPath = config.FfmpegRoot;
 
-    // config ffmpeg
-    ffmpeg.RootPath = config.FfmpegRoot;
+    logger.LogInformation("Bind ffmpeg root path to {path}.", ffmpeg.RootPath);
 
     DynamicallyLoadedBindings.Initialize();
 
