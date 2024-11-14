@@ -27,14 +27,14 @@ RUN apt update && \
     apt update && \
     apt install -y -t testing \ 
         libatomic1 \
-        libavcodec60 \
-        libavdevice60 \
+        libavcodec61 \
+        libavdevice61 \
         libavfilter10 \
-        libavformat60 \
-        libavutil58 \
-        libpostproc57 \
-        libswresample4 \
-        libswscale7
+        libavformat61 \
+        libavutil59 \
+        libpostproc58 \
+        libswresample5 \
+        libswscale8
 
 FROM ffmpeg AS final
 WORKDIR /app
