@@ -5,7 +5,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN cp /etc/apt/sources.list.d/debian.sources /tmp/debian.sources.bak && \
     sed -i 's|deb.debian.org/debian|ftp.cn.debian.org/debian|g' /etc/apt/sources.list.d/debian.sources && \
     apt update && \
-    apt install -y --no-install-recommends libssl3 && \
+    apt install -y --no-install-recommends \
+    ca-certificates && \
     apt clean && \
     rm -rf /var/lib/apt/lists && \
     mv /tmp/debian.sources.bak /etc/apt/sources.list.d/debian.sources
