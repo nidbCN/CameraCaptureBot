@@ -1,4 +1,4 @@
-FROM registry.cn-beijing.aliyuncs.com/nidb-cr/camera-capture-bot-base AS base
+FROM registry.cn-beijing.aliyuncs.com/nidb-cr/camera-capture-bot-base:7.0.2-6 AS base
 USER root
 WORKDIR /app
 
