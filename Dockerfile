@@ -1,5 +1,5 @@
 FROM registry.cn-beijing.aliyuncs.com/nidb-cr/camera-capture-bot-base:7.0.2-6 AS base
-USER root
+USER app
 WORKDIR /app
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
