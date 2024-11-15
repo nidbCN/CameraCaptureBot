@@ -14,7 +14,8 @@
 	</PropertyGroup>
 
         <PropertyGroup>
-                <InvariantGlobalization>true</InvariantGlobalization>
+		<InvariantGlobalization>true</InvariantGlobalization>
+		<JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
         </PropertyGroup>
 
 	<ItemGroup>
