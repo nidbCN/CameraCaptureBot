@@ -16,7 +16,7 @@ RUN dotnet build "./CameraCaptureBot.Core/CameraCaptureBot.Core.csproj" -c $BUIL
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=true
 RUN dotnet publish "./CameraCaptureBot.Core/CameraCaptureBot.Core.csproj" \
     -c $BUILD_CONFIGURATION \
     --self-contained true \
