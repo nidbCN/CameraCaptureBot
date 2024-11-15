@@ -1,9 +1,6 @@
 FROM debian:bookworm-slim AS base
 USER root
 
-COPY ./ffmpeg.tar /tmp
-RUN mkdir -p /tmp/ffmpeg && \
-    tar --strip-components=1 -xf /tmp/ffmpeg.tar -C /tmp/ffmpeg && \
-    cp -r /tmp/ffmpeg/lib/* /usr/lib/x86_64-linux-gnu/ && \
-    rm -r /tmp/ffmpeg && rm /tmp/ffmpeg.tar
+# a future that my docker will copy the file behind soft link.
+COPY ./ffmpeg/lib/*.so /usr/lib/x86_64-linux-gnu/
 
