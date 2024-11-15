@@ -16,9 +16,15 @@ RUN dotnet build "./CameraCaptureBot.Core/CameraCaptureBot.Core.csproj" -c $BUIL
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./CameraCaptureBot.Core/CameraCaptureBot.Core.csproj" -c $BUILD_CONFIGURATION --self-contained true --runtime linux-x64 -o /app/publish
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT
+RUN dotnet publish "./CameraCaptureBot.Core/CameraCaptureBot.Core.csproj" \
+    -c $BUILD_CONFIGURATION \
+    --self-contained true \
+    --runtime linux-x64 \
+    -p:PublishTrimmed=true \
+    -o /app/publish
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["CameraCaptureBot.Core"]
+ENTRYPOINT ["./CameraCaptureBot.Core"]
