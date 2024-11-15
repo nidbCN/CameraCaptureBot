@@ -17,18 +17,20 @@ FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "./CameraCaptureBot.Core/CameraCaptureBot.Core.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
-FROM base AS final
-WORKDIR /app
+FROM base AS environment
+ENV DEBIAN_FRONTEND=noninteractive
+WORKDIR /tmp
 ARG FFMPEG_URL=https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2024-04-30-12-51/ffmpeg-n7.0-21-gfb8f0ea7b3-linux64-gpl-7.0.tar.xz
 RUN apt update &&\
-    apt install curl
+    apt install -y curl
 
-RUN curl -L $FFMPEG_URL -o /tmp/ffmpeg.tar.xz && \
-    mkdir -p /tmp/ffmpeg && \
-    tar -xJf /tmp/ffmpeg.tar.xz -C /tmp/ffmpeg --strip-components=1 && \
-    cp -a /tmp/ffmpeg/lib/. /usr/lib/ && \
-    rm -rf /tmp/ffmpeg.tar.xz /tmp/ffmpeg
+RUN curl -L $FFMPEG_URL -o ffmpeg.tar.xz && \
+    mkdir -p ffmpeg && \
+    tar -xJf ffmpeg.tar.xz -C ffmpeg --strip-components=1 && \
+    cp -a ffmpeg/lib/. /usr/lib/ && \
+    rm -rf ffmpeg.tar.xz ffmpeg
 
+FROM environment AS final
+WORKDIR /app
 COPY --from=publish /app/publish .
-
 ENTRYPOINT ["dotnet", "CameraCaptureBot.Core.dll"]
