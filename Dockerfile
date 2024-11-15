@@ -20,10 +20,10 @@ RUN dotnet publish "./CameraCaptureBot.Core/CameraCaptureBot.Core.csproj" -c $BU
 FROM alpine AS ffmpeg
 WORKDIR /tmp
 RUN apk add --no-cache curl xz
-ARG FFMPEG_URL=https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2024-04-30-12-51/ffmpeg-n7.0-21-gfb8f0ea7b3-linux64-gpl-7.0.tar.xz
+ARG FFMPEG_URL=https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n7.1-latest-linux64-gpl-shared-7.1.tar.xz
 RUN curl -L $FFMPEG_URL -o ffmpeg.tar.xz && \
     mkdir -p ffmpeg && \
-    tar -xJf ffmpeg.tar.xz -C ffmpeg --strip-components=1 "ffmpeg-n7.0.2-6-g7e69129d2f-linux64-gpl-shared-7.0/lib" && \
+    tar -xJf ffmpeg.tar.xz -C ffmpeg --strip-components=1 "ffmpeg-n7.1-latest-linux64-gpl-shared-7.1/lib" && \
     ls ffmpeg
 
 FROM base AS final
