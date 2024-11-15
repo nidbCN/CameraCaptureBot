@@ -11,4 +11,11 @@ RUN cp /etc/apt/sources.list.d/debian.sources /tmp/debian.sources.bak && \
     mv /tmp/debian.sources.bak /etc/apt/sources.list.d/debian.sources
 
 # a future that my docker will copy the file behind soft link.
-COPY ./ffmpeg/lib/*.so /usr/lib/x86_64-linux-gnu/
+COPY ./ffmpeg/lib/libavcodec.so.61 /usr/lib/x86_64-linux-gnu/
+COPY ./ffmpeg/lib/libavdevice.so.61 /usr/lib/x86_64-linux-gnu/
+COPY ./ffmpeg/lib/libavfilter.so.10 /usr/lib/x86_64-linux-gnu/
+COPY ./ffmpeg/lib/libavformat.so.61 /usr/lib/x86_64-linux-gnu/
+COPY ./ffmpeg/lib/libavutil.so.59 /usr/lib/x86_64-linux-gnu/
+COPY ./ffmpeg/lib/libswresample.so.5 /usr/lib/x86_64-linux-gnu/
+COPY ./ffmpeg/lib/libswscale.so.8 /usr/lib/x86_64-linux-gnu/
+
