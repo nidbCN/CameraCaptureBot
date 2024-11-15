@@ -1,7 +1,5 @@
-#See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
-
-FROM mcr.microsoft.com/dotnet/runtime:8.0 AS base
-USER app
+FROM mcr.microsoft.com/dotnet/runtime:8.0-bookworm-slim AS base
+USER root
 WORKDIR /app
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
@@ -19,24 +17,12 @@ FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "./CameraCaptureBot.Core/CameraCaptureBot.Core.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
-FROM base AS ffmpeg
-ENV DEBIAN_FRONTEND=noninteractive
-USER root
-RUN apt update && \
-    sed -i '/^Suites:.*bookworm[^-]/ s/$/ testing/' /etc/apt/sources.list.d/debian.sources && \
-    apt update && \
-    apt install -y -t testing \ 
-        libatomic1 \
-        libavcodec61 \
-        libavdevice61 \
-        libavfilter10 \
-        libavformat61 \
-        libavutil59 \
-        libpostproc58 \
-        libswresample5 \
-        libswscale8
-
-FROM ffmpeg AS final
+FROM base AS final
 WORKDIR /app
+ARG FFMPEG_URL=https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2024-04-30-12-51/ffmpeg-n7.0-21-gfb8f0ea7b3-linux64-gpl-7.0.tar.xz
+
+ADD $FFMPEG_URL /opt/ffmpeg
 COPY --from=publish /app/publish .
+
+ENV LD_LIBRARY_PATH /opt/ffmpeg/lib
 ENTRYPOINT ["dotnet", "CameraCaptureBot.Core.dll"]
