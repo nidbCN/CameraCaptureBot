@@ -1,8 +1,3 @@
-FROM registry.cn-beijing.aliyuncs.com/nidb-cr/camera-capture-bot-base:7.0.2-6 AS base
-USER root
-
-WORKDIR /app
-
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
@@ -22,7 +17,7 @@ RUN dotnet publish "./CameraCaptureBot.Core/CameraCaptureBot.Core.csproj" \
     --runtime linux-x64 \
     -o /app/publish
 
-FROM base AS final
+FROM registry.cn-beijing.aliyuncs.com/nidb-cr/camera-capture-bot-base:7.0.2-6 AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["./CameraCaptureBot.Core"]
