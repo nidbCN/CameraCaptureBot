@@ -23,10 +23,11 @@ RUN apk add --no-cache curl xz
 ARG FFMPEG_URL=https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2024-04-30-12-51/ffmpeg-n7.0-21-gfb8f0ea7b3-linux64-gpl-7.0.tar.xz
 RUN curl -L $FFMPEG_URL -o ffmpeg.tar.xz && \
     mkdir -p ffmpeg && \
-    tar -xJf ffmpeg.tar.xz -C ffmpeg --strip-components=1
+    tar -xJf ffmpeg.tar.xz -C ffmpeg --strip-components=1 && \
+    ls ffmpeg
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-COPY --from=ffmpeg /tmp/ffmpeg/lib /usr/lib
+COPY --from=ffmpeg /tmp/ffmpeg/lib/* /usr/lib
 ENTRYPOINT ["dotnet", "CameraCaptureBot.Core.dll"]
