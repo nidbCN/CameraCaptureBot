@@ -215,9 +215,9 @@ public class Worker(ILogger<Worker> logger,
         botCtx.Invoker.OnBotOfflineEvent += async (bot, @event) =>
         {
             logger.LogError("Bot offline.");
-         
+
             if (!botOptions.Value.NotificationConfig.NotifyWebhookOnHeartbeat) return;
-            
+
             logger.LogWarning("{option} set true, send HTTP POST to webhook.",
                 nameof(botOptions.Value.NotificationConfig.NotifyWebhookOnHeartbeat));
             await _httpClient.PostAsync(botOptions.Value.NotificationConfig.WebhookUrl,
@@ -242,17 +242,45 @@ public class Worker(ILogger<Worker> logger,
         ConfigureEvents();
         await StartUp.LoginAsync(botCtx, isoStorage, logger, botOptions.Value, stoppingToken);
 
-        while (botOptions.Value.NotificationConfig.NotifyWebhookOnHeartbeat
-               && !stoppingToken.IsCancellationRequested)
+        while (!stoppingToken.IsCancellationRequested
+               && botOptions.Value.NotificationConfig.NotifyWebhookOnHeartbeat
+               || botOptions.Value.NotificationConfig.NotifyAdminOnHeartbeat)
         {
-            var url = botOptions.Value.NotificationConfig.WebhookUrl;
-            var headers = botOptions.Value.NotificationConfig.WebhookHeaders;
-
             await Task.Delay(TimeSpan.FromHours(botOptions.Value.NotificationConfig.HeartbeatIntervalHour), stoppingToken);
 
-            if (url is not null)
+            if (botOptions.Value.NotificationConfig is
+                { NotifyWebhookOnHeartbeat: true, WebhookUrl: not null })
             {
-                await _httpClient.PostAsync(url, new StringContent($@"Time: `{DateTime.Now:s}`, Msg: {nameof(CameraCaptureBot)} alive\."), stoppingToken);
+                var url = botOptions.Value.NotificationConfig.WebhookUrl!;
+
+                var headers = botOptions.Value.NotificationConfig.WebhookHeaders;
+                var resp = await _httpClient
+                    .PostAsync(url, new StringContent($@"Time: `{DateTime.Now:s}`, {nameof(CameraCaptureBot)} alive\."), stoppingToken);
+                if (!resp.IsSuccessStatusCode)
+                {
+                    logger.LogInformation("Webhook heartbeat invoked, {code} {msg}.", resp.StatusCode, resp.ReasonPhrase);
+                }
+                else
+                {
+                    logger.LogWarning("Webhook heartbeat invoked failed, {code} {msg}.", resp.StatusCode, resp.ReasonPhrase);
+                }
+            }
+
+            if (botOptions.Value.NotificationConfig.NotifyAdminOnHeartbeat)
+            {
+                try
+                {
+                    var message = MessageBuilder
+                        .Friend(botOptions.Value.AdminAccounts[0])
+                        .Text($"Time: {DateTime.Now:s}, {nameof(CameraCaptureBot)} alive.")
+                        .Build();
+                    await botCtx.SendMessage(message);
+                    logger.LogInformation("Bot heartbeat invoked.");
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e, "Bot heartbeat invoked failed, {msg}.", e.Message);
+                }
             }
         }
     }
