@@ -20,7 +20,6 @@ RUN dotnet publish "./CameraCaptureBot.Core/CameraCaptureBot.Core.csproj" \
     -c $BUILD_CONFIGURATION \
     --self-contained true \
     --runtime linux-x64 \
-    -p:PublishTrimmed=true \
     -o /app/publish
 
 FROM base AS final
