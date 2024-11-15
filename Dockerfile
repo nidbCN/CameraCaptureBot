@@ -21,8 +21,12 @@ FROM base AS final
 WORKDIR /app
 ARG FFMPEG_URL=https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2024-04-30-12-51/ffmpeg-n7.0-21-gfb8f0ea7b3-linux64-gpl-7.0.tar.xz
 
-ADD $FFMPEG_URL /opt/ffmpeg
+RUN wget -O /tmp/ffmpeg.tar.xz $FFMPEG_URL && \
+    mkdir -p /tmp/ffmpeg && \
+    tar -xJf /tmp/ffmpeg.tar.xz -C /tmp/ffmpeg --strip-components=1 && \
+    cp -a /tmp/ffmpeg/lib/. /usr/lib/ && \
+    rm -rf /tmp/ffmpeg.tar.xz /tmp/ffmpeg
+
 COPY --from=publish /app/publish .
 
-ENV LD_LIBRARY_PATH /opt/ffmpeg/lib
 ENTRYPOINT ["dotnet", "CameraCaptureBot.Core.dll"]
