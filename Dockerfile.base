@@ -1,0 +1,6 @@
+FROM mcr.microsoft.com/dotnet/runtime:8.0-bookworm-slim AS base
+USER root
+
+WORKDIR /app
+
+COPY ./ffmpeg/lib/* /usr/lib

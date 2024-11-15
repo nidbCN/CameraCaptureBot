@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/runtime:8.0-bookworm-slim AS base
+FROM registry.cn-beijing.aliyuncs.com/nidb-cr/camera-capture-bot-base AS base
 USER root
 WORKDIR /app
 
@@ -17,17 +17,7 @@ FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "./CameraCaptureBot.Core/CameraCaptureBot.Core.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
-FROM alpine AS ffmpeg
-WORKDIR /tmp
-RUN apk add --no-cache curl xz
-ARG FFMPEG_URL=https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n7.1-latest-linux64-gpl-shared-7.1.tar.xz
-RUN curl -L $FFMPEG_URL -o ffmpeg.tar.xz && \
-    mkdir -p ffmpeg && \
-    tar -xJf ffmpeg.tar.xz -C ffmpeg --strip-components=1 "ffmpeg-n7.1-latest-linux64-gpl-shared-7.1/lib" && \
-    ls ffmpeg
-
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-COPY --from=ffmpeg /tmp/ffmpeg/lib/* /usr/lib
 ENTRYPOINT ["dotnet", "CameraCaptureBot.Core.dll"]
