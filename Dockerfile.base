@@ -1,6 +1,9 @@
-FROM mcr.microsoft.com/dotnet/runtime:8.0-bookworm-slim AS base
+FROM debian:bookworm-slim AS base
 USER root
 
-WORKDIR /app
+COPY ./ffmpeg.tar /tmp
+RUN mkdir -p /tmp/ffmpeg && \
+    tar --strip-components=1 -xf /tmp/ffmpeg.tar -C /tmp/ffmpeg && \
+    cp -r /tmp/ffmpeg/lib/* /usr/lib/x86_64-linux-gnu/ && \
+    rm -r /tmp/ffmpeg && rm /tmp/ffmpeg.tar
 
-COPY ./ffmpeg/lib/* /usr/lib
