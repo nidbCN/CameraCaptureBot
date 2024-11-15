@@ -13,12 +13,9 @@
 		<FileVersion>8.1.4.4</FileVersion>
 	</PropertyGroup>
 
-	<ItemGroup>
-		<Compile Remove="SignProviders\**" />
-		<Content Remove="SignProviders\**" />
-		<EmbeddedResource Remove="SignProviders\**" />
-		<None Remove="SignProviders\**" />
-	</ItemGroup>
+        <PropertyGroup>
+                <InvariantGlobalization>true</InvariantGlobalization>
+        </PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="FFmpeg.AutoGen" Version="7.0.0" />
