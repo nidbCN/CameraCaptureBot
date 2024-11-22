@@ -8,6 +8,8 @@ namespace CameraCaptureBot.Core.Extensions.DependencyInjection;
 
 public static class ServiceCollectionExtension
 {
+    private static readonly Random RandomGen = new();
+
     public static void AddIsoStorages(this IServiceCollection services)
     {
         services.AddSingleton(IsolatedStorageFile.GetStore(
@@ -22,19 +24,35 @@ public static class ServiceCollectionExtension
         using var isoStore = IsolatedStorageFile.GetStore(
             IsolatedStorageScope.User | IsolatedStorageScope.Application, null, null);
 
-        var deviceInfo = ReadAsJsonOrDelete<BotDeviceInfo>(isoStore, botOption.DeviceInfoFile);
-        deviceInfo.DeviceName = "linux-capture";
+        var deviceInfo = ReadAsJsonOrDelete<BotDeviceInfo>(isoStore, botOption.DeviceInfoFile)
+            ?? GenerateInfo();
 
-        var keyStore = ReadAsJsonOrDelete<BotKeystore>(isoStore, botOption.KeyStoreFile);
+        var keyStore = ReadAsJsonOrDelete<BotKeystore>(isoStore, botOption.KeyStoreFile)
+            ?? new BotKeystore();
         services.AddSingleton(BotFactory.Create(botOption.FrameworkConfig, deviceInfo, keyStore));
 
         isoStore.Close();
     }
 
-    private static T ReadAsJsonOrDelete<T>(IsolatedStorageFile handler, string filename) where T : new()
+    private static BotDeviceInfo GenerateInfo()
+    {
+        var macAddress = new byte[6];
+        RandomGen.NextBytes(macAddress);
+
+        return new()
+        {
+            Guid = Guid.NewGuid(),
+            MacAddress = macAddress,
+            DeviceName = "linux-capture",
+            SystemKernel = "Ubuntu 24.04.1 LTS",
+            KernelVersion = "6.8.0-48-generic"
+        };
+    }
+
+    private static T? ReadAsJsonOrDelete<T>(IsolatedStorageFile handler, string filename) where T : new()
     {
         if (!handler.FileExists(filename))
-            return new();
+            return default;
 
         try
         {
@@ -45,7 +63,7 @@ public static class ServiceCollectionExtension
         {
             Console.WriteLine(e);
             handler.DeleteFile(filename);
-            return new();
+            return default;
         }
     }
 }
