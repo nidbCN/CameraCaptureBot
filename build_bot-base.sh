@@ -2,6 +2,12 @@
 
 FF_REPO="./CameraCaptureBot.Base/ffmpeg"
 
+if [ -d "$FF_REPO" ]; then
+    echo "ffmpeg has been cloned."
+else
+    git clone -b release/7.0 https://git.ffmpeg.org/ffmpeg.git $FF_REPO
+fi
+
 VERSION=$(cd $FF_REPO && git describe --tags | awk -F'-' '{print $1 "-" $2}')
 if [[ -z "$VERSION" ]]; then
     echo "Error: Invaild tags, Have you clone all submodules?"
