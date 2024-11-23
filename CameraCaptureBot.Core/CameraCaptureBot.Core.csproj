@@ -19,7 +19,6 @@
         </PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="FFmpeg.AutoGen" Version="7.0.0" />
 		<PackageReference Include="FFmpeg.AutoGen.Bindings.DynamicallyLoaded" Version="7.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
 		<PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="8.0.1" />

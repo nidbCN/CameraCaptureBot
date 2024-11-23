@@ -1,5 +1,5 @@
 ﻿using System.Runtime.InteropServices;
-using FFmpeg.AutoGen;
+using FFmpeg.AutoGen.Abstractions;
 using Microsoft.Extensions.Options;
 
 namespace CameraCaptureBot.Core.Services;

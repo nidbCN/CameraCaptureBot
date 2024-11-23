@@ -1,4 +1,4 @@
-﻿using FFmpeg.AutoGen;
+﻿using FFmpeg.AutoGen.Abstractions;
 
 namespace CameraCaptureBot.Core.Codecs;
 

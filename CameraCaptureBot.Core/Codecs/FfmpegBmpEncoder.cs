@@ -1,6 +1,6 @@
 ﻿using CameraCaptureBot.Core.Extensions;
 using CameraCaptureBot.Core.Utils;
-using FFmpeg.AutoGen;
+using FFmpeg.AutoGen.Abstractions;
 
 namespace CameraCaptureBot.Core.Codecs;
 

@@ -1,7 +1,7 @@
 ﻿using CameraCaptureBot.Core.Configs;
 using CameraCaptureBot.Core.Extensions;
 using CameraCaptureBot.Core.Utils;
-using FFmpeg.AutoGen;
+using FFmpeg.AutoGen.Abstractions;
 using Microsoft.Extensions.Options;
 using NotImplementedException = System.NotImplementedException;
 

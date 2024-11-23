@@ -1,9 +1,8 @@
-﻿using System.Runtime.InteropServices;
-using CameraCaptureBot.Core.Codecs;
+﻿using CameraCaptureBot.Core.Codecs;
 using CameraCaptureBot.Core.Configs;
 using CameraCaptureBot.Core.Extensions;
 using CameraCaptureBot.Core.Utils;
-using FFmpeg.AutoGen;
+using FFmpeg.AutoGen.Abstractions;
 using Microsoft.Extensions.Options;
 
 namespace CameraCaptureBot.Core.Services;

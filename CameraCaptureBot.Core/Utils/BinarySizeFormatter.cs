@@ -1,6 +1,4 @@
-﻿using System.Drawing;
-
-namespace CameraCaptureBot.Core.Utils;
+﻿namespace CameraCaptureBot.Core.Utils;
 
 public sealed class BinarySizeFormatter : IFormatProvider, ICustomFormatter
 {
