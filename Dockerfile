@@ -17,7 +17,7 @@ RUN dotnet publish "./CameraCaptureBot.Core/CameraCaptureBot.Core.csproj" \
     --runtime linux-x64 \
     -o /app/publish
 
-FROM registry.cn-beijing.aliyuncs.com/nidb-cr/camera-capture-bot-base:7.0.2-26 AS final
+FROM registry.cn-beijing.aliyuncs.com/nidb-cr/camera-capture-bot-base:n7.0.2-26 AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["./CameraCaptureBot.Core"]
