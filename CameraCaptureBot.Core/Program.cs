@@ -51,6 +51,7 @@ static void ConfigureFfMpeg(ILogger logger, StreamOption config)
 
     logger.LogInformation("Bind ffmpeg root path to {path}.", DynamicallyLoadedBindings.LibrariesPath);
 
+    DynamicallyLoadedBindings.ThrowErrorIfFunctionNotFound = true;
     DynamicallyLoadedBindings.Initialize();
 
     // test ffmpeg load
