@@ -5,6 +5,7 @@ using CameraCaptureBot.Core.Extensions.DependencyInjection;
 using CameraCaptureBot.Core.Services;
 using CameraCaptureBot.Core.Utils;
 using FFmpeg.AutoGen.Abstractions;
+using FFmpeg.AutoGen.Bindings.DynamicallyLinked;
 //using FFmpeg.AutoGen.Bindings.DynamicallyLoaded;
 using Microsoft.Extensions.Options;
 
@@ -47,12 +48,13 @@ static void ConfigureFfMpeg(ILogger logger, StreamOption config)
     ArgumentNullException.ThrowIfNull(config);
 
     //if (config.FfmpegRoot is not null)
-        //DynamicallyLoadedBindings.LibrariesPath = config.FfmpegRoot;
+    //DynamicallyLoadedBindings.LibrariesPath = config.FfmpegRoot;
 
     //logger.LogInformation("Bind ffmpeg root path to {path}.", DynamicallyLoadedBindings.LibrariesPath);
 
     //DynamicallyLoadedBindings.ThrowErrorIfFunctionNotFound = true;
     //DynamicallyLoadedBindings.Initialize();
+    DynamicallyLinkedBindings.Initialize();
 
     // test ffmpeg load
     try
