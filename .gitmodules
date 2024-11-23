@@ -1,3 +1,7 @@
 [submodule "Lagrange.Core"]
 	path = Lagrange.Core
 	url = https://github.com/LagrangeDev/Lagrange.Core/
+[submodule "CameraCaptureBot.Base/ffmpeg"]
+	path = CameraCaptureBot.Base/ffmpeg
+	url = https://git.ffmpeg.org/ffmpeg.git
+	branch = n7.0
