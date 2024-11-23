@@ -1,21 +1,22 @@
 #!/bin/bash
-./configure --prefix=$BUILD_DIR \
-    --extra-version="Built for https://github.com/nidbCN/CameraCaptureBot" \
+./configure --prefix=$OUTPUT_PATH \
     --extra-libs="-lpthread -lm" \
+    --extra-cflags="-I/usr/local/include" \
+    --extra-ldflags="-L/usr/local/lib" \
     --pkg-config-flags="--static" \
-    --ld="g++" \
     --arch=amd64 \
-    --disable-postproc \
     --disable-debug \
+    --disable-static \
+    --enable-shared \
     --disable-stripping \
     --enable-gnutls \
     --enable-gpl \
     --enable-version3 \
-    --enable-shared \
     --enable-small \
     --disable-doc \
     --disable-ffprobe \
     --disable-ffplay \
+    --disable-avdevice \
     --disable-encoders \
     --enable-encoder=libwebp \
     --enable-encoder=libwebp_anim \

@@ -1,6 +1,8 @@
 services:
-  CameraCaptureBot:
-    image: camera-capture-bot:test
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
     tty: true
     environment:
       - TZ=Asia/Shanghai
@@ -9,7 +11,6 @@ services:
     configs:
       - source: appsettings
         target: /app/appsettings.json
-    restart: unless-stopped
 
 configs:
   appsettings:
