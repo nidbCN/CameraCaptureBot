@@ -2,6 +2,7 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudio,windows,linux,aspnetcore,dotnetcore
 IsolatedStorage/
 appsettings.json
+CameraCaptureBot.Base/ffmpeg/
 **/appsettings.*.json
 
 ### ASPNETCore ###
