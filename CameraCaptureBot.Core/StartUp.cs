@@ -1,8 +1,8 @@
-﻿using CameraCaptureBot.Core.Configs;
+﻿using System.IO.IsolatedStorage;
+using System.Text.Json;
+using CameraCaptureBot.Core.Configs;
 using Lagrange.Core;
 using Lagrange.Core.Common.Interface.Api;
-using System.IO.IsolatedStorage;
-using System.Text.Json;
 
 namespace CameraCaptureBot.Core;
 internal sealed class StartUp
