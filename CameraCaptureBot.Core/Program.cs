@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using System.Text;
 using CameraCaptureBot.Core;
 using CameraCaptureBot.Core.Codecs;
 using CameraCaptureBot.Core.Configs;
@@ -79,16 +80,28 @@ static void ConfigureFfMpeg(ILogger logger, StreamOption config)
     // test ffmpeg load
     try
     {
-        var version = ffmpeg.av_version_info();
-        logger.LogInformation("Load ffmpeg version {v}", version ?? "unknown");
+        var libraryVersion = new StringBuilder(48 * libraryDict.Count);
+        var version = ffmpeg.av_version_info() + '\n';
 
         foreach (var (name, func) in libraryDict)
         {
-            logger.LogInformation("Library {name} version {ver}", name, func.Invoke());
+            libraryVersion.AppendLine($"\tLibrary {name} version {FormatLibraryVersionInfo(func())}.");
         }
+
+        logger.LogInformation("Load ffmpeg, version {v}", version);
+        logger.LogInformation("Load ffmpeg, libraries:\n{libInfo}", libraryVersion);
     }
     catch (NotSupportedException e)
     {
         logger.LogCritical(e, "Failed to load ffmpeg, exit.");
     }
+}
+
+// char[14]
+static string FormatLibraryVersionInfo(uint versionData)
+{
+    var major = (ushort)(versionData >> 16);
+    var mid = (byte)((versionData & 0x00FF) >> 8);
+    var minor = (byte)versionData;
+    return $"{major}.{mid}.{minor}";
 }
