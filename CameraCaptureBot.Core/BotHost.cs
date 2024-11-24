@@ -1,8 +1,4 @@
 ﻿using System.IO.IsolatedStorage;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
 using CameraCaptureBot.Core.Configs;
 using CameraCaptureBot.Core.Services;
@@ -11,7 +7,6 @@ using Lagrange.Core.Common.Interface.Api;
 using Lagrange.Core.Event.EventArg;
 using Lagrange.Core.Message;
 using Lagrange.Core.Message.Entity;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using BotLogLevel = Lagrange.Core.Event.EventArg.LogLevel;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
@@ -21,33 +16,33 @@ internal class BotHost : IHostedLifecycleService
 {
     private readonly ILogger _logger;
     private readonly IHostApplicationLifetime _appLifetime;
+    private readonly IServiceProvider _services;
     private readonly BotContext _botCtx;
-    private readonly CaptureService _captureService;
     private readonly IsolatedStorageFile _isoStorage;
     private readonly IOptions<BotOption> _botOptions;
 
     public BotHost(
         ILogger<BotHost> logger,
         IHostApplicationLifetime appLifetime,
+        IServiceProvider services,
         IOptions<BotOption> botOptions,
         BotContext botCtx,
-        CaptureService captureService,
         IsolatedStorageFile isoStorage)
     {
         _logger = logger;
         _appLifetime = appLifetime;
+        _services = services;
         _botOptions = botOptions;
         _botCtx = botCtx;
-        _captureService = captureService;
         _isoStorage = isoStorage;
-
-        _appLifetime.ApplicationStarted.Register(OnStarted);
-        _appLifetime.ApplicationStopping.Register(OnStopping);
-        _appLifetime.ApplicationStopped.Register(OnStopped);
     }
+
+    private Task LoginAsync() => LoginAsync(CancellationToken.None);
 
     private async Task LoginAsync(CancellationToken stoppingToken)
     {
+
+
         var loggedIn = false;
         var keyStore = _botCtx.UpdateKeystore();
 
@@ -112,15 +107,17 @@ internal class BotHost : IHostedLifecycleService
         catch (TaskCanceledException e)
         {
             _logger.LogError(e, "QRCode login timeout, can't boot.");
-            throw;
+            _appLifetime.StopApplication();
         }
     }
 
     private async Task SendCaptureMessage(MessageBuilder message, BotContext thisBot)
     {
+        var captureService = _services.GetRequiredService<CaptureService>();
+
         try
         {
-            var (result, image) = await _captureService.CaptureImageAsync();
+            var (result, image) = await captureService.CaptureImageAsync();
 
             if (!result || image is null)
             {
@@ -143,7 +140,7 @@ internal class BotHost : IHostedLifecycleService
         finally
         {
             var sendTask = thisBot.SendMessage(message.Build());
-            var flushTask = _captureService.FlushDecoderBufferAsync(CancellationToken.None);
+            var flushTask = captureService.FlushDecoderBufferAsync(CancellationToken.None);
             await Task.WhenAll(sendTask, flushTask);
         }
     }
@@ -340,7 +337,6 @@ internal class BotHost : IHostedLifecycleService
         }
     }
 
-
     Task IHostedLifecycleService.StartingAsync(CancellationToken cancellationToken)
     {
         return Task.CompletedTask;
@@ -349,17 +345,12 @@ internal class BotHost : IHostedLifecycleService
     Task IHostedService.StartAsync(CancellationToken cancellationToken)
     {
         _botCtx.Invoker.OnBotLogEvent += ProcessLog;
-
         _botCtx.Invoker.OnBotCaptchaEvent += ProcessCaptcha;
-
         _botCtx.Invoker.OnBotOnlineEvent +=
             async (bot, @event) => await ProcessBotOnline(bot, @event);
-
         _botCtx.Invoker.OnBotOfflineEvent += ProcessBotOffline;
-
         _botCtx.Invoker.OnGroupMessageReceived +=
             async (bot, @event) => await ProcessMessage(@event.Chain, bot);
-
         _botCtx.Invoker.OnFriendMessageReceived +=
             async (bot, @event) => await ProcessMessage(@event.Chain, bot);
 
@@ -371,39 +362,12 @@ internal class BotHost : IHostedLifecycleService
         await LoginAsync(cancellationToken);
     }
 
-    private void OnStarted()
-    {
-        _logger.LogInformation("4. OnStarted has been called.");
-    }
-
-    private void OnStopping()
-    {
-        _logger.LogInformation("5. OnStopping has been called.");
-    }
-
     Task IHostedLifecycleService.StoppingAsync(CancellationToken cancellationToken)
-    {
-        _logger.LogInformation("6. StoppingAsync has been called.");
-
-        return Task.CompletedTask;
-    }
+        => Task.CompletedTask;
 
     Task IHostedService.StopAsync(CancellationToken cancellationToken)
-    {
-        _logger.LogInformation("7. StopAsync has been called.");
-
-        return Task.CompletedTask;
-    }
+        => Task.CompletedTask;
 
     Task IHostedLifecycleService.StoppedAsync(CancellationToken cancellationToken)
-    {
-        _logger.LogInformation("8. StoppedAsync has been called.");
-
-        return Task.CompletedTask;
-    }
-
-    private void OnStopped()
-    {
-        _logger.LogInformation("9. OnStopped has been called.");
-    }
+        => Task.CompletedTask;
 }

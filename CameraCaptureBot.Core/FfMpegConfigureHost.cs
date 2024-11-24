@@ -112,15 +112,13 @@ public class FfMpegConfigureHost(ILogger<FfMpegConfigureHost> logger, IOptions<S
         return NativeLibrary.Load(unixStyleName, assembly, searchPath);
     }
 
-    public Task StartAsync(CancellationToken cancellationToken)
-        => Task.CompletedTask;
-
     public Task StartingAsync(CancellationToken cancellationToken)
     {
         ConfigureFfMpegLibrary();
-
         return Task.CompletedTask;
     }
+    public Task StartAsync(CancellationToken cancellationToken)
+        => Task.CompletedTask;
 
     public Task StartedAsync(CancellationToken cancellationToken)
         => Task.CompletedTask;
