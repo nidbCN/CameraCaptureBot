@@ -54,13 +54,13 @@ internal class BotHost : IHostedLifecycleService
         // password Login
         if (keyStore.Uin != 0 && keyStore.Session.TempPassword is not null)
         {
-            using var pwdLoginTimeoutTokenSrc = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            using var pwdLoginTimeoutTokenSrc = new CancellationTokenSource(TimeSpan.FromMinutes(2));
             using var pwdLoginStoppingTokenSrc = CancellationTokenSource
                 .CreateLinkedTokenSource(stoppingToken, pwdLoginTimeoutTokenSrc.Token);
 
             try
             {
-                _logger.LogInformation("Try login use password, timeout value: 5 sec.");
+                _logger.LogInformation("Try login use password, timeout value: 2 min.");
                 loggedIn = await _botCtx.LoginByPassword(pwdLoginStoppingTokenSrc.Token);
 
                 if (!loggedIn)
@@ -76,7 +76,7 @@ internal class BotHost : IHostedLifecycleService
         if (loggedIn) return;
 
         // QRCode login
-        _logger.LogInformation("Try login use QRCode, timeout value: 5 sec.");
+        _logger.LogInformation("Try login use QRCode, timeout value: 2 min.");
 
         var (url, _) = await _botCtx.FetchQrCode()
                        ?? throw new ApplicationException(message: "Fetch QRCode failed.\n");
