@@ -71,7 +71,7 @@ static void ConfigureFfMpeg(ILogger logger, StreamOption config)
         if (config.FfmpegRoot is not null)
             DynamicallyLoadedBindings.LibrariesPath = config.FfmpegRoot;
 
-        logger.LogInformation("Bind ffmpeg root path to {path}.", DynamicallyLoadedBindings.LibrariesPath);
+        logger.LogInformation("Bind ffmpeg root path to `{path}`.", DynamicallyLoadedBindings.LibrariesPath);
 
         DynamicallyLoadedBindings.ThrowErrorIfFunctionNotFound = true;
         DynamicallyLoadedBindings.Initialize();
@@ -80,13 +80,15 @@ static void ConfigureFfMpeg(ILogger logger, StreamOption config)
     // test ffmpeg load
     try
     {
+        var version = ffmpeg.av_version_info();
         var libraryVersion = new StringBuilder(48 * libraryDict.Count);
-        var version = ffmpeg.av_version_info() + '\n';
 
         foreach (var (name, func) in libraryDict)
         {
             libraryVersion.AppendLine($"\tLibrary {name} version {FormatLibraryVersionInfo(func())}.");
         }
+
+        libraryVersion.Remove(libraryVersion.Length, 1);    // remove '\n'
 
         logger.LogInformation("Load ffmpeg, version {v}", version);
         logger.LogInformation("Load ffmpeg, libraries:\n{libInfo}", libraryVersion);
