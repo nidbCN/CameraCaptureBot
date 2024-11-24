@@ -1,4 +1,8 @@
 ﻿using System.IO.IsolatedStorage;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using CameraCaptureBot.Core.Configs;
 using CameraCaptureBot.Core.Services;
@@ -7,6 +11,7 @@ using Lagrange.Core.Common.Interface.Api;
 using Lagrange.Core.Event.EventArg;
 using Lagrange.Core.Message;
 using Lagrange.Core.Message.Entity;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using BotLogLevel = Lagrange.Core.Event.EventArg.LogLevel;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
@@ -44,81 +49,70 @@ internal class BotHost : IHostedLifecycleService
     private async Task LoginAsync(CancellationToken stoppingToken)
     {
         var loggedIn = false;
+        var keyStore = _botCtx.UpdateKeystore();
 
-        var pwdLoginTimeoutTokenSrc = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-
-        try
+        // password Login
+        if (keyStore.Uin != 0 && keyStore.Session.TempPassword is not null)
         {
-            _logger.LogInformation("Try login use password, timeout value: 5 sec.");
-            loggedIn = await _botCtx.LoginByPassword(pwdLoginTimeoutTokenSrc.Token);
-        }
-        catch (TaskCanceledException e)
-        {
-            _logger.LogError(e, "Password login timeout, try QRCode.");
-        }
-        finally
-        {
-            pwdLoginTimeoutTokenSrc.Dispose();
-        }
-
-        if (!loggedIn)
-        {
-            _logger.LogWarning("Password login failed, try QRCode.");
-
-            var (url, _) = await _botCtx.FetchQrCode()
-                           ?? throw new ApplicationException(message: "Fetch QRCode failed.\n");
-
-            // The QrCode will be expired in 2 minutes.
-            var qrLoginTimeoutTokenSrc = new CancellationTokenSource(TimeSpan.FromMinutes(2));
-
-            var link = new UriBuilder("https://util-functions.azurewebsites.net/api/QrCode")
-            {
-                Query = await new FormUrlEncodedContent(
-                    new Dictionary<string, string> {
-                        {"content", url}
-                    }).ReadAsStringAsync(stoppingToken)
-            };
-
-            if (_logger.IsEnabled(LogLevel.Information))
-            {
-                _logger.LogInformation("Open link `{link}` and scan the QRCode to login.", link.Uri.ToString());
-            }
-            else
-            {
-                Console.WriteLine("Open link `{0}` and scan the QRCode to login.", link.Uri.ToString());
-            }
-
-            // Use both external stopping token and login timeout token.
-            using var qrLoginStoppingTokenSrc = CancellationTokenSource
-                .CreateLinkedTokenSource(stoppingToken, qrLoginTimeoutTokenSrc.Token);
+            using var pwdLoginTimeoutTokenSrc = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            using var pwdLoginStoppingTokenSrc = CancellationTokenSource
+                .CreateLinkedTokenSource(stoppingToken, pwdLoginTimeoutTokenSrc.Token);
 
             try
             {
-                await _botCtx.LoginByQrCode(qrLoginStoppingTokenSrc.Token);
+                _logger.LogInformation("Try login use password, timeout value: 5 sec.");
+                loggedIn = await _botCtx.LoginByPassword(pwdLoginStoppingTokenSrc.Token);
+
+                if (!loggedIn)
+                    _logger.LogWarning("Password login failed, try QRCode.");
             }
             catch (TaskCanceledException e)
             {
-                _logger.LogError(e, "QRCode login timeout, can't boot.");
-                throw;
+                _logger.LogError(e, "Password login timeout, try QRCode.");
             }
         }
 
-        // save device info and keystore
+        // password login success
+        if (loggedIn) return;
+
+        // QRCode login
+        _logger.LogInformation("Try login use QRCode, timeout value: 5 sec.");
+
+        var (url, _) = await _botCtx.FetchQrCode()
+                       ?? throw new ApplicationException(message: "Fetch QRCode failed.\n");
+
+        // The QrCode will be expired in 2 minutes.
+        using var qrLoginTimeoutTokenSrc = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+
+        var link = new UriBuilder("https://util-functions.azurewebsites.net/api/QrCode")
+        {
+            Query = await new FormUrlEncodedContent(
+                new Dictionary<string, string> {
+                        {"content", url}
+                }).ReadAsStringAsync(stoppingToken)
+        };
+
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation("Open link `{link}` and scan the QRCode to login.", link.Uri.ToString());
+        }
+        else
+        {
+            Console.WriteLine("Open link `{0}` and scan the QRCode to login.", link.Uri.ToString());
+        }
+
+        // Use both external stopping token and login timeout token.
+        using var qrLoginStoppingTokenSrc = CancellationTokenSource
+            .CreateLinkedTokenSource(stoppingToken, qrLoginTimeoutTokenSrc.Token);
+
         try
         {
-            await using var deviceInfoFileStream = _isoStorage.OpenFile(_botOptions.Value.DeviceInfoFile, FileMode.OpenOrCreate, FileAccess.Write);
-            await JsonSerializer.SerializeAsync(deviceInfoFileStream, _botCtx.UpdateDeviceInfo(), cancellationToken: stoppingToken);
-
-            await using var keyFileStream = _isoStorage.OpenFile(_botOptions.Value.KeyStoreFile, FileMode.OpenOrCreate, FileAccess.Write);
-            await JsonSerializer.SerializeAsync(keyFileStream, _botCtx.UpdateKeystore(), cancellationToken: stoppingToken);
+            await _botCtx.LoginByQrCode(qrLoginStoppingTokenSrc.Token);
         }
-        catch (Exception e)
+        catch (TaskCanceledException e)
         {
-            _logger.LogError(e, "Save device info and key files failed.");
-        }
-        finally
-        {
-            _isoStorage.Close();
+            _logger.LogError(e, "QRCode login timeout, can't boot.");
+            throw;
         }
     }
 
@@ -226,9 +220,29 @@ internal class BotHost : IHostedLifecycleService
         }
     }
 
-    private void ProcessBotOnline(BotContext bot, BotOnlineEvent _)
+    private async Task ProcessBotOnline(BotContext bot, BotOnlineEvent _)
     {
         _logger.LogInformation("Login Success! Bot {id} online.", bot.BotUin);
+
+        // save device info and keystore
+        try
+        {
+            await using var deviceInfoFileStream = _isoStorage.OpenFile(_botOptions.Value.DeviceInfoFile, FileMode.OpenOrCreate, FileAccess.Write);
+            await JsonSerializer.SerializeAsync(deviceInfoFileStream, _botCtx.UpdateDeviceInfo());
+
+            var keyStore = _botCtx.UpdateKeystore();
+
+            await using var keyFileStream = _isoStorage.OpenFile(_botOptions.Value.KeyStoreFile, FileMode.OpenOrCreate, FileAccess.Write);
+            await JsonSerializer.SerializeAsync(keyFileStream, keyStore);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Save device info and key files failed.");
+        }
+        finally
+        {
+            _isoStorage.Close();
+        }
 
         //if (_botOptions.Value.NotificationConfig.NotifyWebhookOnHeartbeat)
         //{
@@ -329,20 +343,17 @@ internal class BotHost : IHostedLifecycleService
 
     Task IHostedLifecycleService.StartingAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("1. StartingAsync has been called.");
-
         return Task.CompletedTask;
     }
 
     Task IHostedService.StartAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("2. StartAsync has been called.");
-
         _botCtx.Invoker.OnBotLogEvent += ProcessLog;
 
         _botCtx.Invoker.OnBotCaptchaEvent += ProcessCaptcha;
 
-        _botCtx.Invoker.OnBotOnlineEvent += ProcessBotOnline;
+        _botCtx.Invoker.OnBotOnlineEvent +=
+            async (bot, @event) => await ProcessBotOnline(bot, @event);
 
         _botCtx.Invoker.OnBotOfflineEvent += ProcessBotOffline;
 
@@ -357,8 +368,6 @@ internal class BotHost : IHostedLifecycleService
 
     async Task IHostedLifecycleService.StartedAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("3. StartedAsync has been called.");
-
         await LoginAsync(cancellationToken);
     }
 
