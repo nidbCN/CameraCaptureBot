@@ -88,7 +88,7 @@ static void ConfigureFfMpeg(ILogger logger, StreamOption config)
             libraryVersion.AppendLine($"\tLibrary {name} version {FormatLibraryVersionInfo(func())}.");
         }
 
-        libraryVersion.Remove(libraryVersion.Length, 1);    // remove '\n'
+        libraryVersion.Remove(libraryVersion.Length - 1, 1);    // remove '\n'
 
         logger.LogInformation("Load ffmpeg, version {v}", version);
         logger.LogInformation("Load ffmpeg, libraries:\n{libInfo}", libraryVersion);
