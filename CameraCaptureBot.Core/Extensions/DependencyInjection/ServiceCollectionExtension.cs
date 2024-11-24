@@ -27,8 +27,9 @@ public static class ServiceCollectionExtension
         var deviceInfo = ReadAsJsonOrDelete<BotDeviceInfo>(isoStore, botOption.DeviceInfoFile)
             ?? GenerateInfo();
 
-        var keyStore = ReadAsJsonOrDelete<BotKeystore>(isoStore, botOption.KeyStoreFile)
-            ?? new BotKeystore();
+        var keyStore = ReadAsJsonOrDelete<BotKeystore>(isoStore, botOption.KeyStoreFile) 
+                       ?? new();
+
         services.AddSingleton(BotFactory.Create(botOption.FrameworkConfig, deviceInfo, keyStore));
 
         isoStore.Close();
