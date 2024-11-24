@@ -32,7 +32,8 @@ builder.Services.AddIsoStorages();
 builder.Services.AddBots(() => builder.Configuration
     .GetRequiredSection(nameof(BotOption))
     .Get<BotOption>()!);
-builder.Services.AddHostedService<Worker>();
+builder.Services.AddHostedService<BotHost>();
+builder.Services.AddHostedService<HeartBeatWorker>();
 
 var host = builder.Build();
 
@@ -46,6 +47,18 @@ return;
 
 static void ConfigureFfMpeg(ILogger logger, StreamOption config)
 {
+    // ReSharper disable StringLiteralTypo
+    var libraryDict = new Dictionary<string, Func<uint>>
+    {
+        { "avutil", ffmpeg.avutil_version },
+        { "swscale", ffmpeg.swscale_version },
+        { "swresample", ffmpeg.swresample_version },
+        { "postproc", ffmpeg.postproc_version },
+        { "avcodec", ffmpeg.avcodec_version },
+        { "avformat", ffmpeg.avformat_version },
+        { "avfilter", ffmpeg.avfilter_version }
+    };
+
     ArgumentNullException.ThrowIfNull(config);
 
     if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -68,6 +81,11 @@ static void ConfigureFfMpeg(ILogger logger, StreamOption config)
     {
         var version = ffmpeg.av_version_info();
         logger.LogInformation("Load ffmpeg version {v}", version ?? "unknown");
+
+        foreach (var (name, func) in libraryDict)
+        {
+            logger.LogInformation("Library {name} version {ver}", name, func.Invoke());
+        }
     }
     catch (NotSupportedException e)
     {
