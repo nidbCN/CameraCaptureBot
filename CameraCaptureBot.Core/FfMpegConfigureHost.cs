@@ -27,7 +27,7 @@ public class FfMpegConfigureHost(ILogger<FfMpegConfigureHost> logger, IOptions<S
     private void ConfigureFfMpegLibrary()
     {
         // use linked
-        if (options.Value.FfmpegRoot is null)
+        if (options.Value.FfMpegLibrariesPath is null)
         {
             logger.LogInformation("ffmpeg library path not set, use {bind}.", nameof(FFmpeg.AutoGen.Bindings.DynamicallyLinked));
 
@@ -52,9 +52,9 @@ public class FfMpegConfigureHost(ILogger<FfMpegConfigureHost> logger, IOptions<S
         }
         //else
         {
-            DynamicallyLoadedBindings.LibrariesPath = options.Value.FfmpegRoot;
+            DynamicallyLoadedBindings.LibrariesPath = options.Value.FfMpegLibrariesPath;
 
-            if (options.Value.FfmpegRoot == string.Empty)
+            if (options.Value.FfMpegLibrariesPath == string.Empty)
             {
                 logger.LogInformation("ffmpeg library path set to system default search path, use {bind}.",
                     nameof(FFmpeg.AutoGen.Bindings.DynamicallyLoaded));
@@ -62,7 +62,7 @@ public class FfMpegConfigureHost(ILogger<FfMpegConfigureHost> logger, IOptions<S
             else
             {
                 logger.LogInformation("ffmpeg library path set to {path}, use {bind}.",
-                    DynamicallyLoadedBindings.LibrariesPath = options.Value.FfmpegRoot,
+                    DynamicallyLoadedBindings.LibrariesPath = options.Value.FfMpegLibrariesPath,
                     nameof(FFmpeg.AutoGen.Bindings.DynamicallyLoaded));
             }
 
