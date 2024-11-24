@@ -50,7 +50,7 @@ public class FfMpegConfigureHost(ILogger<FfMpegConfigureHost> logger, IOptions<S
 
             DynamicallyLinkedBindings.Initialize();
         }
-        //else
+        else
         {
             DynamicallyLoadedBindings.LibrariesPath = options.Value.FfMpegLibrariesPath;
 
