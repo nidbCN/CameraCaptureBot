@@ -1,4 +1,8 @@
 ﻿using System.IO.IsolatedStorage;
+using System.Net.Mime;
+using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using CameraCaptureBot.Core.Configs;
 using CameraCaptureBot.Core.Services;
@@ -41,8 +45,6 @@ internal class BotHost : IHostedLifecycleService
 
     private async Task LoginAsync(CancellationToken stoppingToken)
     {
-
-
         var loggedIn = false;
         var keyStore = _botCtx.UpdateKeystore();
 
@@ -229,6 +231,32 @@ internal class BotHost : IHostedLifecycleService
 
             var keyStore = _botCtx.UpdateKeystore();
 
+            if (string.IsNullOrEmpty(keyStore.PasswordMd5))
+            {
+                if (_botOptions.Value.AccountPasswords?.TryGetValue(keyStore.Uin, out var pwd) ?? false)
+                {
+                    if (pwd.Hashed)
+                    {
+                        keyStore.PasswordMd5 = pwd.Password;
+                    }
+                    else
+                    {
+                        var hashData = MD5.HashData(Encoding.UTF8.GetBytes(pwd.Password));
+                        var buffer = new char[hashData.Length * 2 + 1];
+                        for (var i = 0; i < hashData.Length; i++)
+                        {
+                            var twoChar = ToCharsBuffer(hashData[i]);
+                            buffer[i] = (char)(twoChar >> 8);
+                            buffer[i] = (char)(twoChar & 0x00FFu);
+                        }
+
+                        buffer[^1] = '\0';
+
+                        keyStore.PasswordMd5 = new(buffer);
+                    }
+                }
+            }
+
             await using var keyFileStream = _isoStorage.OpenFile(_botOptions.Value.KeyStoreFile, FileMode.OpenOrCreate, FileAccess.Write);
             await JsonSerializer.SerializeAsync(keyFileStream, keyStore);
         }
@@ -370,4 +398,21 @@ internal class BotHost : IHostedLifecycleService
 
     Task IHostedLifecycleService.StoppedAsync(CancellationToken cancellationToken)
         => Task.CompletedTask;
+
+    /// <summary>
+    ///  By Executor-Cheng 
+    /// </summary>
+    /// <see cref="https://github.com/KonataDev/Lagrange.Core/pull/344#pullrequestreview-2027515322"/>
+    /// <param name="value">sign byte</param>
+    /// <param name="casing">0x200020u for lower, 0x00u for upper</param>
+    /// <returns>High 16bit, Low 16 bit</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static uint ToCharsBuffer(byte value, uint casing = 0)
+    {
+        var difference = BitConverter.IsLittleEndian
+            ? ((uint)value >> 4) + ((value & 0x0Fu) << 16) - 0x890089u
+            : ((value & 0xF0u) << 12) + (value & 0x0Fu) - 0x890089u;
+        var packedResult = ((((uint)-(int)difference & 0x700070u) >> 4) + difference + 0xB900B9u) | casing;
+        return packedResult;
+    }
 }

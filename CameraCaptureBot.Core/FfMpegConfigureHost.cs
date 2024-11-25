@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using CameraCaptureBot.Core.Configs;
@@ -107,12 +108,26 @@ public class FfMpegConfigureHost(ILogger<FfMpegConfigureHost> logger, IOptions<S
 
     public static IntPtr FfMpegDllImportResolverCore(string libraryName, Assembly assembly, DllImportSearchPath? searchPath, string extension)
     {
-        var partedName = libraryName.Split('-');
+        var libraryNameSpan = libraryName.AsSpan();
+        var partedIndex = libraryNameSpan.IndexOf('-');
 
-        if (partedName.Length != 2)
+        if (libraryNameSpan.LastIndexOf('-') != partedIndex)
+        {
+            // format not ffmpeg library
             return NativeLibrary.Load(libraryName, assembly, searchPath);
+        }
 
-        var styledName = $"{partedName[0]}.{extension}.{partedName[1]}";
+        var pureName = libraryNameSpan[..partedIndex];
+
+        if (!FunctionResolverBase.LibraryDependenciesMap.ContainsKey(pureName.ToString()))
+        {
+            // not ffmpeg library
+            return NativeLibrary.Load(libraryName, assembly, searchPath);
+        }
+
+        var versionName = libraryNameSpan[partedIndex..];
+
+        var styledName = $"{pureName}.{extension}.{versionName}";
         return NativeLibrary.Load(styledName, assembly, searchPath);
     }
 
