@@ -19,7 +19,7 @@ mv appsettings.Example.json appsettings.json
 docker compose up -d
 ```
 
-注意: 默认使用的是 git master 分支构建的镜像，可能会存在 bug。可以更改为 `registry.cn-beijing.aliyuncs.com/nidb-cr/camera-capture-bot:latest` 或 `:8.x.x.x`
+注意: 默认使用的是 git master 分支构建的镜像，可能会存在 bug。可以更改为 `registry.cn-beijing.aliyuncs.com/nidb-cr/camera-capture-bot:latest` 或 `:8.x.x.x`。更多 tag 参考 [容器镜像](https://github.com/nidbCN/CameraCaptureBot?tab=readme-ov-file#%E5%AE%B9%E5%99%A8%E9%95%9C%E5%83%8F)。
 
 ### 镜像内置 ffmpeg
 
@@ -28,6 +28,8 @@ docker compose up -d
 使用镜像中内置的 ffmpeg 时候， `appsettings.json` 中的 `StreamOption.FfMpegLibrariesPath` 应设置为 `""` （空字符串）或 `null` 或不填写。
 
 当需要使用自定义 ffmpeg 库时候，应该设置为自定义库的路径。
+
+配置参考 [配置](https://github.com/nidbCN/CameraCaptureBot?tab=readme-ov-file#%E9%85%8D%E7%BD%AE) 章节。
 
 ## 直接使用二进制
 
@@ -39,7 +41,7 @@ Windows 下载地址 [Builds - CODEX FFMPEG @ gyan.dev](https://www.gyan.dev/ffm
 
 Linux pre-built 地址 [Releases · BtbN/FFmpeg-Builds](https://github.com/BtbN/FFmpeg-Builds/releases/)
 
-配置参考 配置 章节。
+配置参考 [配置](https://github.com/nidbCN/CameraCaptureBot?tab=readme-ov-file#%E9%85%8D%E7%BD%AE) 章节。
 
 ### 部署
 
@@ -234,22 +236,22 @@ Linux pre-built 地址 [Releases · BtbN/FFmpeg-Builds](https://github.com/BtbN/
 
 Lagrange.Core 设置，详见 [创建 Bot 实例 | Lagrange 文档](https://lagrangedev.github.io/Lagrange.Doc/Lagrange.Core/CreateBot/#botconfig-%E9%85%8D%E7%BD%AE%E7%B1%BB)
 
-## 发行版
+# 发行版
 
-### 源码
+## 源码
 
-见 [https://github.com/nidbCN/CameraCaptureBot/releases](Releases · nidbCN/CameraCaptureBot)
+见 [Releases · nidbCN/CameraCaptureBot](https://github.com/nidbCN/CameraCaptureBot/releases)。
 
-### 容器镜像
+## 容器镜像
 
-#### git
+### git
 
 最新版，通常与代码同步（除非最新的代码构建失败），可能有 bug，可能会爆炸，但是是最新的。
 
 * Tag: `git`
 * Name: `registry.cn-beijing.aliyuncs.com/nidb-cr/camera-capture-bot:git`
 
-#### latest
+### latest
 
 最新发行版，通常与最新的 Release 相同
 
@@ -258,42 +260,42 @@ Lagrange.Core 设置，详见 [创建 Bot 实例 | Lagrange 文档](https://lagr
 * Digest: `6c6bd4d1db5bf3ac718c7dabf3185ff20ce1b0224dc0e71d27d4589d69ab40f0`
 * Name: `registry.cn-beijing.aliyuncs.com/nidb-cr/camera-capture-bot:latest`
 
-#### Release v8.1.5.4
+### Release v8.1.5.4
 
 * Tag: `8.1.5.4`
 * Id: `219974ac3294967110f241c06ba5950154fd7d1594e3f4487a08e29385640b47`
 * Digest: `60a217efb2397e13371ad0fa0349d8dc8776671caa00a794c15cb5170fea5d6a`
 * Name: `registry.cn-beijing.aliyuncs.com/nidb-cr/camera-capture-bot:8.1.5.4`
 
-#### Release 8.1.4.5
+### Release 8.1.4.5
 
 * Tag: `8.1.4.5`
 * Id: `b03e5f393ffeb258997374f28fa2e80279cfb8403bd609b891ae642370a2b91b`
 * Digest: `9affe100cc6787d913a25116099c27d5c7adf0540dd35a09b59497e21d4504c3`
 * Name: `registry.cn-beijing.aliyuncs.com/nidb-cr/camera-capture-bot:8.1.4.5`
 
-#### Release 8.1.4.4
+### Release 8.1.4.4
 
 * Tag: `8.1.4.4`
 * Id: `32c38ea0e494054d3bada3978b03bbe61a445f65ab7e522570c20c7d047cfdc3`
 * Digest: `836ac17988cd5a231362b4bde02f5d67443f8af57f7fa8d2b04b4cdc51ba25a0`
 * Name: `registry.cn-beijing.aliyuncs.com/nidb-cr/camera-capture-bot:8.1.4.4`
 
-#### Release 8.1.4.3
+### Release 8.1.4.3
 
 * Tag: `8.1.4.3`
 * Id: `d17d446cd0fca45bd24daf5091a79c9c1cdcb4529c16d9060d01fc9edb204a3d`
 * Digest: `833a6e1b7387c74d5d499029a4beb12acab4a08a72134119afc2fe19ca67210f`
 * Name: `registry.cn-beijing.aliyuncs.com/nidb-cr/camera-capture-bot:8.1.4.3`
 
-#### Release v8.1.2.2
+### Release v8.1.2.2
 
 * Tag: `v8.1.2.2`
 * Id: `4eef20bd5a10569aa6ed6a6d43030eeb54a0d41618c3074768143ec6788d0faa`
 * Digest: `bdc2196ad372df50dc28aa4e33b3c171bcf0b6adefef19e4a3e6ac487369b8fc`
 * Name: `registry.cn-beijing.aliyuncs.com/nidb-cr/camera-capture-bot:v8.1.2.2`
 
-### 二进制
+## 二进制
 
 暂时懒得打包，自己编译吧。
 
