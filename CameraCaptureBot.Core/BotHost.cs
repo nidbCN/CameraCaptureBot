@@ -230,8 +230,8 @@ internal class BotHost(
                         for (var i = 0; i < hashData.Length; i += 2)
                         {
                             var twoChar = ToCharsBuffer(hashData[i], 0x200020u);
-                            buffer[i] = (char)(twoChar >> 8);
-                            buffer[i + 1] = (char)(twoChar & 0x00FFu);
+                            buffer[i] = (char)(twoChar >> 16);
+                            buffer[i + 1] = (char)(twoChar & 0x0000FFFFu);
                         }
 
                         buffer[^1] = '\0';
