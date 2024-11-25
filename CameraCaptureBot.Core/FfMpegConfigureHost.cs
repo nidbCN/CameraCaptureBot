@@ -1,8 +1,6 @@
-﻿using System.Linq;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Text.Json;
 using CameraCaptureBot.Core.Configs;
 using FFmpeg.AutoGen.Abstractions;
 using FFmpeg.AutoGen.Bindings.DynamicallyLinked;
@@ -14,18 +12,6 @@ namespace CameraCaptureBot.Core;
 public class FfMpegConfigureHost(ILogger<FfMpegConfigureHost> logger, IOptions<StreamOption> options)
     : IHostedLifecycleService
 {
-    // ReSharper disable StringLiteralTypo
-    private static readonly IDictionary<string, Func<uint>> LibrariesInfos = new Dictionary<string, Func<uint>>
-    {
-        { "avutil", ffmpeg.avutil_version },
-        { "swscale", ffmpeg.swscale_version },
-        { "swresample", ffmpeg.swresample_version },
-        { "postproc", ffmpeg.postproc_version },
-        { "avcodec", ffmpeg.avcodec_version },
-        { "avformat", ffmpeg.avformat_version },
-        { "avfilter", ffmpeg.avfilter_version }
-    };
-
     private void ConfigureFfMpegLibrary()
     {
         // use linked
@@ -80,13 +66,14 @@ public class FfMpegConfigureHost(ILogger<FfMpegConfigureHost> logger, IOptions<S
         try
         {
             var version = ffmpeg.av_version_info();
-            var libraryVersion = new StringBuilder(48 * LibrariesInfos.Count);
+            var libraryVersion = new StringBuilder(48 * DynamicallyLoadedBindings.LibraryVersionMap.Count);
 
-            foreach (var (libName, versionFunc) in LibrariesInfos)
+            foreach (var (library, requiredVersion) in DynamicallyLoadedBindings.LibraryVersionMap)
             {
-                var versionInfo = new FfMpegVersionStruct(versionFunc.Invoke());
+                var versionFunc = typeof(ffmpeg).GetMethod($"{library}_version");
+                var versionInfo = new FfMpegVersionStruct((uint)(versionFunc?.Invoke(null, null) ?? 0u));
 
-                libraryVersion.AppendLine($"\tLibrary: {libName} version `{versionInfo}`");
+                libraryVersion.AppendLine($"\tLibrary: {library}, require `{requiredVersion}`, load `{versionInfo}`");
             }
 
             libraryVersion.Remove(libraryVersion.Length - 1, 1);    // remove '\n'
@@ -120,7 +107,7 @@ public class FfMpegConfigureHost(ILogger<FfMpegConfigureHost> logger, IOptions<S
 
         var pureName = libraryNameSpan[..partedIndex];
 
-        if (!FunctionResolverBase.LibraryDependenciesMap.ContainsKey(pureName.ToString()))
+        if (!DynamicallyLoadedBindings.LibraryVersionMap.ContainsKey(pureName.ToString()))
         {
             // not ffmpeg library
             return NativeLibrary.Load(libraryName, assembly, searchPath);
