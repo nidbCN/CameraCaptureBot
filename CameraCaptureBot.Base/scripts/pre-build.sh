@@ -16,7 +16,6 @@
     --disable-doc \
     --disable-ffprobe \
     --disable-ffplay \
-    --disable-avdevice \
     --disable-encoders \
     --enable-encoder=libwebp \
     --enable-encoder=libwebp_anim \
