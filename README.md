@@ -234,6 +234,69 @@ Linux pre-built 地址 [Releases · BtbN/FFmpeg-Builds](https://github.com/BtbN/
 
 Lagrange.Core 设置，详见 [创建 Bot 实例 | Lagrange 文档](https://lagrangedev.github.io/Lagrange.Doc/Lagrange.Core/CreateBot/#botconfig-%E9%85%8D%E7%BD%AE%E7%B1%BB)
 
+## 发行版
+
+### 源码
+
+见 [https://github.com/nidbCN/CameraCaptureBot/releases](Releases · nidbCN/CameraCaptureBot)
+
+### 容器镜像
+
+#### git
+
+最新版，通常与代码同步（除非最新的代码构建失败），可能有 bug，可能会爆炸，但是是最新的。
+
+* Tag: `git`
+* Name: `registry.cn-beijing.aliyuncs.com/nidb-cr/camera-capture-bot:git`
+
+#### latest
+
+最新发行版，通常与最新的 Release 相同
+
+* Tag: `latest`
+* Id: `219974ac3294967110f241c06ba5950154fd7d1594e3f4487a08e29385640b47`
+* Digest: `6c6bd4d1db5bf3ac718c7dabf3185ff20ce1b0224dc0e71d27d4589d69ab40f0`
+* Name: `registry.cn-beijing.aliyuncs.com/nidb-cr/camera-capture-bot:latest`
+
+#### Release v8.1.5.4
+
+* Tag: `8.1.5.4`
+* Id: `219974ac3294967110f241c06ba5950154fd7d1594e3f4487a08e29385640b47`
+* Digest: `60a217efb2397e13371ad0fa0349d8dc8776671caa00a794c15cb5170fea5d6a`
+* Name: `registry.cn-beijing.aliyuncs.com/nidb-cr/camera-capture-bot:8.1.5.4`
+
+#### Release 8.1.4.5
+
+* Tag: `8.1.4.5`
+* Id: `b03e5f393ffeb258997374f28fa2e80279cfb8403bd609b891ae642370a2b91b`
+* Digest: `9affe100cc6787d913a25116099c27d5c7adf0540dd35a09b59497e21d4504c3`
+* Name: `registry.cn-beijing.aliyuncs.com/nidb-cr/camera-capture-bot:8.1.4.5`
+
+#### Release 8.1.4.4
+
+* Tag: `8.1.4.4`
+* Id: `32c38ea0e494054d3bada3978b03bbe61a445f65ab7e522570c20c7d047cfdc3`
+* Digest: `836ac17988cd5a231362b4bde02f5d67443f8af57f7fa8d2b04b4cdc51ba25a0`
+* Name: `registry.cn-beijing.aliyuncs.com/nidb-cr/camera-capture-bot:8.1.4.4`
+
+#### Release 8.1.4.3
+
+* Tag: `8.1.4.3`
+* Id: `d17d446cd0fca45bd24daf5091a79c9c1cdcb4529c16d9060d01fc9edb204a3d`
+* Digest: `833a6e1b7387c74d5d499029a4beb12acab4a08a72134119afc2fe19ca67210f`
+* Name: `registry.cn-beijing.aliyuncs.com/nidb-cr/camera-capture-bot:8.1.4.3`
+
+#### Release v8.1.2.2
+
+* Tag: `v8.1.2.2`
+* Id: `4eef20bd5a10569aa6ed6a6d43030eeb54a0d41618c3074768143ec6788d0faa`
+* Digest: `bdc2196ad372df50dc28aa4e33b3c171bcf0b6adefef19e4a3e6ac487369b8fc`
+* Name: `registry.cn-beijing.aliyuncs.com/nidb-cr/camera-capture-bot:v8.1.2.2`
+
+### 二进制
+
+暂时懒得打包，自己编译吧。
+
 # 开发计划
 
 - [x] 解码RTSP并发送图片
