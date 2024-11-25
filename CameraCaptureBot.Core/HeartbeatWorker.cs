@@ -42,12 +42,16 @@ public class HeartBeatWorker(ILogger<HeartBeatWorker> logger,
             {
                 try
                 {
-                    var message = MessageBuilder
-                        .Friend(botOptions.Value.AdminAccounts[0])
-                        .Text($"Time: {DateTime.Now:s}, {nameof(CameraCaptureBot)} alive.")
-                        .Build();
-                    await botCtx.SendMessage(message);
-                    logger.LogInformation("Bot heartbeat invoked.");
+                    await Parallel.ForEachAsync(botOptions.Value.AdminAccounts, stoppingToken,
+                        async (account, _) =>
+                    {
+                        var message = MessageBuilder
+                            .Friend(account)
+                            .Text($"Time: {DateTime.Now:s}, {nameof(CameraCaptureBot)} alive.")
+                            .Build();
+                        await botCtx.SendMessage(message);
+                        logger.LogInformation("Bot heartbeat invoked.");
+                    });
                 }
                 catch (Exception e)
                 {
