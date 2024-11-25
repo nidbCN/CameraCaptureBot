@@ -4,7 +4,6 @@ using Lagrange.Core.Common.Interface.Api;
 using Lagrange.Core.Message;
 using Microsoft.Extensions.Options;
 
-
 namespace CameraCaptureBot.Core;
 
 public class HeartBeatWorker(ILogger<HeartBeatWorker> logger,
@@ -16,9 +15,11 @@ public class HeartBeatWorker(ILogger<HeartBeatWorker> logger,
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested
-               && botOptions.Value.NotificationConfig.NotifyWebhookOnHeartbeat
-               || botOptions.Value.NotificationConfig.NotifyAdminOnHeartbeat)
+               && (botOptions.Value.NotificationConfig.NotifyWebhookOnHeartbeat
+               || botOptions.Value.NotificationConfig.NotifyAdminOnHeartbeat))
         {
+            await Task.Delay(TimeSpan.FromHours(botOptions.Value.NotificationConfig.HeartbeatIntervalHour), stoppingToken);
+
             if (botOptions.Value.NotificationConfig is
                 { NotifyWebhookOnHeartbeat: true, WebhookUrl: not null })
             {
@@ -53,8 +54,6 @@ public class HeartBeatWorker(ILogger<HeartBeatWorker> logger,
                     logger.LogError(e, "Bot heartbeat invoked failed, {msg}.", e.Message);
                 }
             }
-
-            await Task.Delay(TimeSpan.FromHours(botOptions.Value.NotificationConfig.HeartbeatIntervalHour), stoppingToken);
         }
     }
 

@@ -16,37 +16,21 @@ using BotLogLevel = Lagrange.Core.Event.EventArg.LogLevel;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace CameraCaptureBot.Core;
-internal class BotHost : IHostedLifecycleService
+internal class BotHost(
+    ILogger<BotHost> logger,
+    IHostApplicationLifetime appLifetime,
+    IServiceProvider services,
+    IOptions<BotOption> botOptions,
+    BotContext botCtx,
+    IsolatedStorageFile isoStorage)
+    : IHostedLifecycleService
 {
-    private readonly ILogger _logger;
-    private readonly IHostApplicationLifetime _appLifetime;
-    private readonly IServiceProvider _services;
-    private readonly BotContext _botCtx;
-    private readonly IsolatedStorageFile _isoStorage;
-    private readonly IOptions<BotOption> _botOptions;
-
-    public BotHost(
-        ILogger<BotHost> logger,
-        IHostApplicationLifetime appLifetime,
-        IServiceProvider services,
-        IOptions<BotOption> botOptions,
-        BotContext botCtx,
-        IsolatedStorageFile isoStorage)
-    {
-        _logger = logger;
-        _appLifetime = appLifetime;
-        _services = services;
-        _botOptions = botOptions;
-        _botCtx = botCtx;
-        _isoStorage = isoStorage;
-    }
-
     private Task LoginAsync() => LoginAsync(CancellationToken.None);
 
     private async Task LoginAsync(CancellationToken stoppingToken)
     {
         var loggedIn = false;
-        var keyStore = _botCtx.UpdateKeystore();
+        var keyStore = botCtx.UpdateKeystore();
 
         // password Login
         if (keyStore.Uin != 0 && keyStore.Session.TempPassword is not null)
@@ -57,15 +41,15 @@ internal class BotHost : IHostedLifecycleService
 
             try
             {
-                _logger.LogInformation("Try login use password, timeout value: 2 min.");
-                loggedIn = await _botCtx.LoginByPassword(pwdLoginStoppingTokenSrc.Token);
+                logger.LogInformation("Try login use password, timeout value: 2 min.");
+                loggedIn = await botCtx.LoginByPassword(pwdLoginStoppingTokenSrc.Token);
 
                 if (!loggedIn)
-                    _logger.LogWarning("Password login failed, try QRCode.");
+                    logger.LogWarning("Password login failed, try QRCode.");
             }
             catch (TaskCanceledException e)
             {
-                _logger.LogError(e, "Password login timeout, try QRCode.");
+                logger.LogError(e, "Password login timeout, try QRCode.");
             }
         }
 
@@ -73,9 +57,9 @@ internal class BotHost : IHostedLifecycleService
         if (loggedIn) return;
 
         // QRCode login
-        _logger.LogInformation("Try login use QRCode, timeout value: 2 min.");
+        logger.LogInformation("Try login use QRCode, timeout value: 2 min.");
 
-        var (url, _) = await _botCtx.FetchQrCode()
+        var (url, _) = await botCtx.FetchQrCode()
                        ?? throw new ApplicationException(message: "Fetch QRCode failed.\n");
 
         // The QrCode will be expired in 2 minutes.
@@ -89,9 +73,9 @@ internal class BotHost : IHostedLifecycleService
                 }).ReadAsStringAsync(stoppingToken)
         };
 
-        if (_logger.IsEnabled(LogLevel.Information))
+        if (logger.IsEnabled(LogLevel.Information))
         {
-            _logger.LogInformation("Open link `{link}` and scan the QRCode to login.", link.Uri.ToString());
+            logger.LogInformation("Open link `{link}` and scan the QRCode to login.", link.Uri.ToString());
         }
         else
         {
@@ -104,18 +88,18 @@ internal class BotHost : IHostedLifecycleService
 
         try
         {
-            await _botCtx.LoginByQrCode(qrLoginStoppingTokenSrc.Token);
+            await botCtx.LoginByQrCode(qrLoginStoppingTokenSrc.Token);
         }
         catch (TaskCanceledException e)
         {
-            _logger.LogError(e, "QRCode login timeout, can't boot.");
-            _appLifetime.StopApplication();
+            logger.LogError(e, "QRCode login timeout, can't boot.");
+            appLifetime.StopApplication();
         }
     }
 
     private async Task SendCaptureMessage(MessageBuilder message, BotContext thisBot)
     {
-        var captureService = _services.GetRequiredService<CaptureService>();
+        var captureService = services.GetRequiredService<CaptureService>();
 
         try
         {
@@ -124,7 +108,7 @@ internal class BotHost : IHostedLifecycleService
             if (!result || image is null)
             {
                 // 编解码失败
-                _logger.LogError("Decode failed, send error message.");
+                logger.LogError("Decode failed, send error message.");
                 message.Text("杰哥不要！（图像编解码失败）");
             }
             else
@@ -135,7 +119,7 @@ internal class BotHost : IHostedLifecycleService
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Failed to decode and encode.");
+            logger.LogError(e, "Failed to decode and encode.");
             message.Text("杰哥不要！（图像编解码器崩溃）");
             message.Text("你最好不要说出去，我知道你的学校和班级：\n" + e.Message + e.StackTrace);
         }
@@ -154,14 +138,14 @@ internal class BotHost : IHostedLifecycleService
                 .Friend(account)
                 .Text(e.Message + '\n' + e.StackTrace)
                 .Build();
-            await _botCtx.SendMessage(msg);
+            await botCtx.SendMessage(msg);
         });
 
     private void ProcessLog(BotContext bot, BotLogEvent @event)
     {
-        using (_logger.BeginScope($"{nameof(Lagrange.Core.Event.EventArg.BotLogEvent)}"))
+        using (logger.BeginScope($"{nameof(Lagrange.Core.Event.EventArg.BotLogEvent)}"))
         {
-            _logger.Log(@event.Level switch
+            logger.Log(@event.Level switch
             {
                 BotLogLevel.Debug => LogLevel.Trace,
                 BotLogLevel.Verbose => LogLevel.Debug,
@@ -176,13 +160,13 @@ internal class BotHost : IHostedLifecycleService
 
     private void ProcessCaptcha(BotContext bot, BotCaptchaEvent @event)
     {
-        _logger.LogWarning("Need captcha, url: {msg}", @event.Url);
-        _logger.LogInformation("Input response json string:");
+        logger.LogWarning("Need captcha, url: {msg}", @event.Url);
+        logger.LogInformation("Input response json string:");
         var json = Console.ReadLine();
 
         if (json is null || string.IsNullOrWhiteSpace(json))
         {
-            _logger.LogError("You input nothing! can't boot.");
+            logger.LogError("You input nothing! can't boot.");
             throw new ApplicationException("Can't boot without captcha.");
         }
 
@@ -192,7 +176,7 @@ internal class BotHost : IHostedLifecycleService
 
             if (jsonObj is null)
             {
-                _logger.LogError("Deserialize `{json}` failed, result is null.", json);
+                logger.LogError("Deserialize `{json}` failed, result is null.", json);
             }
             else
             {
@@ -203,7 +187,7 @@ internal class BotHost : IHostedLifecycleService
                 if (jsonObj.TryGetValue(ticket, out var ticketValue)
                     && jsonObj.TryGetValue(randStr, out var randStrValue))
                 {
-                    _logger.LogInformation("Receive captcha, ticket {t}, rand-str {s}", ticketValue, randStrValue);
+                    logger.LogInformation("Receive captcha, ticket {t}, rand-str {s}", ticketValue, randStrValue);
                     bot.SubmitCaptcha(ticketValue, randStrValue);
                 }
                 else
@@ -214,26 +198,26 @@ internal class BotHost : IHostedLifecycleService
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Deserialize failed! str: {s}", json);
+            logger.LogError(e, "Deserialize failed! str: {s}", json);
             throw;
         }
     }
 
     private async Task ProcessBotOnline(BotContext bot, BotOnlineEvent _)
     {
-        _logger.LogInformation("Login Success! Bot {id} online.", bot.BotUin);
+        logger.LogInformation("Login Success! Bot {id} online.", bot.BotUin);
 
         // save device info and keystore
         try
         {
-            await using var deviceInfoFileStream = _isoStorage.OpenFile(_botOptions.Value.DeviceInfoFile, FileMode.OpenOrCreate, FileAccess.Write);
-            await JsonSerializer.SerializeAsync(deviceInfoFileStream, _botCtx.UpdateDeviceInfo());
+            await using var deviceInfoFileStream = isoStorage.OpenFile(botOptions.Value.DeviceInfoFile, FileMode.OpenOrCreate, FileAccess.Write);
+            await JsonSerializer.SerializeAsync(deviceInfoFileStream, botCtx.UpdateDeviceInfo());
 
-            var keyStore = _botCtx.UpdateKeystore();
+            var keyStore = botCtx.UpdateKeystore();
 
             if (string.IsNullOrEmpty(keyStore.PasswordMd5))
             {
-                if (_botOptions.Value.AccountPasswords?.TryGetValue(keyStore.Uin, out var pwd) ?? false)
+                if (botOptions.Value.AccountPasswords?.TryGetValue(keyStore.Uin, out var pwd) ?? false)
                 {
                     if (pwd.Hashed)
                     {
@@ -257,16 +241,16 @@ internal class BotHost : IHostedLifecycleService
                 }
             }
 
-            await using var keyFileStream = _isoStorage.OpenFile(_botOptions.Value.KeyStoreFile, FileMode.OpenOrCreate, FileAccess.Write);
+            await using var keyFileStream = isoStorage.OpenFile(botOptions.Value.KeyStoreFile, FileMode.OpenOrCreate, FileAccess.Write);
             await JsonSerializer.SerializeAsync(keyFileStream, keyStore);
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Save device info and key files failed.");
+            logger.LogError(e, "Save device info and key files failed.");
         }
         finally
         {
-            _isoStorage.Close();
+            isoStorage.Close();
         }
 
         //if (_botOptions.Value.NotificationConfig.NotifyWebhookOnHeartbeat)
@@ -278,16 +262,16 @@ internal class BotHost : IHostedLifecycleService
 
     private void ProcessBotOffline(BotContext bot, BotOfflineEvent _)
     {
-        _logger.LogError("Bot {id} offline.", bot.BotUin);
+        logger.LogError("Bot {id} offline.", bot.BotUin);
 
         //    if (!_botOptions.Value.NotificationConfig.NotifyWebhookOnHeartbeat) return;
 
-        //    _logger.LogWarning("{option} set true, send HTTP POST to webhook.",
+        //    logger.LogWarning("{option} set true, send HTTP POST to webhook.",
         //        nameof(_botOptions.Value.NotificationConfig.NotifyWebhookOnHeartbeat));
         //    await _httpClient.PostAsync(botOptions.Value.NotificationConfig.WebhookUrl,
         //        new StringContent(@$"Time: `{@event.EventTime}`, Bot `{bot.BotUin}` offline, msg: {@event.Message.Replace(".", @"\.")}\."));
 
-        _appLifetime.StopApplication();
+        appLifetime.StopApplication();
     }
 
     private async Task ProcessMessage(MessageChain message, BotContext thisBot)
@@ -295,19 +279,19 @@ internal class BotHost : IHostedLifecycleService
         var isGroup = message.GroupUin is not null;
 
         var replyUin = message.FriendUin;
-        var allowedList = _botOptions.Value.AllowedFriends;
+        var allowedList = botOptions.Value.AllowedFriends;
         var groupInfo = string.Empty;
         var builderBuilder = MessageBuilder.Friend;
 
         if (isGroup)
         {
             replyUin = message.GroupUin!.Value;
-            allowedList = _botOptions.Value.AllowedGroups;
+            allowedList = botOptions.Value.AllowedGroups;
             groupInfo = $".Group({message.GroupUin})";
             builderBuilder = MessageBuilder.Group;
         }
 
-        var scope = _logger.BeginScope($"{nameof(BotContext)}{groupInfo}@{message.FriendUin}");
+        var scope = logger.BeginScope($"{nameof(BotContext)}{groupInfo}@{message.FriendUin}");
 
         try
         {
@@ -318,34 +302,34 @@ internal class BotHost : IHostedLifecycleService
             if (!textMessages.Any(m => m!.Text.StartsWith("让我看看")))
                 return;
 
-            _logger.LogInformation("Received command `{msg}`.", message.ToPreviewString());
+            logger.LogInformation("Received command `{msg}`.", message.ToPreviewString());
 
             var messageBuilder = builderBuilder.Invoke(replyUin);
 
             if (allowedList?.Contains(replyUin) ?? true)
             {
-                _logger.LogInformation("Allowed user, send captured image.");
+                logger.LogInformation("Allowed user, send captured image.");
                 await SendCaptureMessage(messageBuilder, thisBot);
             }
             else
             {
-                _logger.LogWarning("UnAllowed user, reject.");
-                await _botCtx.SendMessage(messageBuilder.Text("杰哥，你...你干嘛啊（用户不在白名单）").Build());
+                logger.LogWarning("UnAllowed user, reject.");
+                await botCtx.SendMessage(messageBuilder.Text("杰哥，你...你干嘛啊（用户不在白名单）").Build());
             }
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Failed to process message.");
+            logger.LogError(e, "Failed to process message.");
 
-            if (!_botOptions.Value.NotificationConfig.NotifyAdminOnException)
+            if (!botOptions.Value.NotificationConfig.NotifyAdminOnException)
                 return;
 
-            _logger.LogInformation("{opt} enabled, send error message to admin accounts.",
+            logger.LogInformation("{opt} enabled, send error message to admin accounts.",
                 nameof(BotOption.NotificationConfig.NotifyAdminOnException));
-            var admins = _botOptions.Value.AdminAccounts;
+            var admins = botOptions.Value.AdminAccounts;
             if (admins.Count == 0)
             {
-                _logger.LogWarning("No admin accounts has been configured, can not send message.");
+                logger.LogWarning("No admin accounts has been configured, can not send message.");
             }
             else
             {
@@ -355,7 +339,7 @@ internal class BotHost : IHostedLifecycleService
                 }
                 catch (Exception sendError)
                 {
-                    _logger.LogError(sendError, "Unable to send message");
+                    logger.LogError(sendError, "Unable to send message");
                 }
             }
         }
@@ -372,14 +356,14 @@ internal class BotHost : IHostedLifecycleService
 
     Task IHostedService.StartAsync(CancellationToken cancellationToken)
     {
-        _botCtx.Invoker.OnBotLogEvent += ProcessLog;
-        _botCtx.Invoker.OnBotCaptchaEvent += ProcessCaptcha;
-        _botCtx.Invoker.OnBotOnlineEvent +=
+        botCtx.Invoker.OnBotLogEvent += ProcessLog;
+        botCtx.Invoker.OnBotCaptchaEvent += ProcessCaptcha;
+        botCtx.Invoker.OnBotOnlineEvent +=
             async (bot, @event) => await ProcessBotOnline(bot, @event);
-        _botCtx.Invoker.OnBotOfflineEvent += ProcessBotOffline;
-        _botCtx.Invoker.OnGroupMessageReceived +=
+        botCtx.Invoker.OnBotOfflineEvent += ProcessBotOffline;
+        botCtx.Invoker.OnGroupMessageReceived +=
             async (bot, @event) => await ProcessMessage(@event.Chain, bot);
-        _botCtx.Invoker.OnFriendMessageReceived +=
+        botCtx.Invoker.OnFriendMessageReceived +=
             async (bot, @event) => await ProcessMessage(@event.Chain, bot);
 
         return Task.CompletedTask;
