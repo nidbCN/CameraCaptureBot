@@ -126,7 +126,7 @@ public class FfMpegConfigureHost(ILogger<FfMpegConfigureHost> logger, IOptions<S
             return NativeLibrary.Load(libraryName, assembly, searchPath);
         }
 
-        var versionName = libraryNameSpan[partedIndex..];
+        var versionName = libraryNameSpan[(partedIndex + 1)..];
 
         var styledName = $"{pureName}.{extension}.{versionName}";
         return NativeLibrary.Load(styledName, assembly, searchPath);
