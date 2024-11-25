@@ -25,7 +25,9 @@ docker compose up -d
 
 镜像中内置的 ffmpeg 为 [Release Auto-Build 2024-04-30 12:51 · BtbN/FFmpeg-Builds](https://github.com/BtbN/FFmpeg-Builds/releases/tag/autobuild-2024-04-30-12-51) ，位置在 `/usr/lib/x86_64-linux-gnu/` 。
 
-使用镜像中内置的 ffmpeg 时候， `appsettings.json` 中的 `StreamOption.ffmpegRoot` 应设置为 `""` （空字符串）
+使用镜像中内置的 ffmpeg 时候， `appsettings.json` 中的 `StreamOption.FfMpegLibrariesPath` 应设置为 `""` （空字符串）或 `null` 或不填写。
+
+当需要使用自定义 ffmpeg 库时候，应该设置为自定义库的路径。
 
 ## 直接使用二进制
 
@@ -53,7 +55,9 @@ Linux pre-built 地址 [Releases · BtbN/FFmpeg-Builds](https://github.com/BtbN/
 
 ##### Linux
 
-`StreamOption.ffmpegRoot` 设置为 `""` （空字符串）时，将自动从默认路径中寻找，包括：
+`StreamOption.FfMpegLibrariesPath` 不填写或为 `null` 时，使用 `DllImport`，路径由 .NET 运行时决定。
+
+`StreamOption.FfMpegLibrariesPath` 设置为 `""` （空字符串）时，将自动从默认路径中寻找，包括：
 
 1. `/etc/ld.so.conf` 以及 `/etc/ld.so.conf.d/*.conf` 中所设置的路径；
 2. 环境变量 `LD_LIBRARY_PATH` 中包括的路径；
@@ -61,7 +65,7 @@ Linux pre-built 地址 [Releases · BtbN/FFmpeg-Builds](https://github.com/BtbN/
 
 详细行为见：[dlopen(3) - Linux manual page](https://www.man7.org/linux/man-pages/man3/dlopen.3.html)
 
-`StreamOption.ffmpegRoot` 设置为其它非空字符串时，将从设置的路径中寻找，并忽略上述默认路径。
+`StreamOption.FfMpegLibrariesPath` 设置为其它非空字符串时，将从设置的路径中寻找，并忽略上述默认路径。
 
 ### 部署
 
