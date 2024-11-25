@@ -226,15 +226,13 @@ internal class BotHost(
                     else
                     {
                         var hashData = MD5.HashData(Encoding.UTF8.GetBytes(pwd.Password));
-                        var buffer = new char[hashData.Length * 2 + 1];
+                        var buffer = new char[hashData.Length * 2];
                         for (var i = 0; i < hashData.Length; i++)
                         {
                             var twoChar = ToCharsBuffer(hashData[i], 0x200020u);
                             buffer[2 * i] = (char)(twoChar >> 16);
                             buffer[2 * i + 1] = (char)(twoChar & 0x0000FFFFu);
                         }
-
-                        buffer[^1] = '\0';
 
                         keyStore.PasswordMd5 = new(buffer);
                     }
