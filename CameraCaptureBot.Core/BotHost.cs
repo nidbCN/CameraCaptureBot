@@ -227,11 +227,11 @@ internal class BotHost(
                     {
                         var hashData = MD5.HashData(Encoding.UTF8.GetBytes(pwd.Password));
                         var buffer = new char[hashData.Length * 2 + 1];
-                        for (var i = 0; i < hashData.Length; i += 2)
+                        for (var i = 0; i < hashData.Length; i++)
                         {
                             var twoChar = ToCharsBuffer(hashData[i], 0x200020u);
-                            buffer[i] = (char)(twoChar >> 16);
-                            buffer[i + 1] = (char)(twoChar & 0x0000FFFFu);
+                            buffer[2 * i] = (char)(twoChar >> 16);
+                            buffer[2 * i + 1] = (char)(twoChar & 0x0000FFFFu);
                         }
 
                         buffer[^1] = '\0';
