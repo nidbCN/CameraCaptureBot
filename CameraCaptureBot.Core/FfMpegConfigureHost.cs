@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.Json;
 using CameraCaptureBot.Core.Configs;
 using FFmpeg.AutoGen.Abstractions;
 using FFmpeg.AutoGen.Bindings.DynamicallyLinked;
@@ -39,12 +40,12 @@ public class FfMpegConfigureHost(ILogger<FfMpegConfigureHost> logger, IOptions<S
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
                     || RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD))
                 {
-                    logger.LogInformation("Linux/FreeBSD platform, use resolver {name} for assembly {asm}.", nameof(LinuxFfMpegDllImportResolver), bindingAssembly.GetName());
+                    logger.LogInformation("Linux/FreeBSD platform, use resolver {name} for assembly `{asm}`.", nameof(LinuxFfMpegDllImportResolver), bindingAssembly.GetName());
                     NativeLibrary.SetDllImportResolver(bindingAssembly, LinuxFfMpegDllImportResolver);
                 }
                 else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                 {
-                    logger.LogInformation("OSX platform, use resolver {name} for assembly {asm}.", nameof(LinuxFfMpegDllImportResolver), bindingAssembly.GetName());
+                    logger.LogInformation("OSX platform, use resolver {name} for assembly `{asm}`.", nameof(LinuxFfMpegDllImportResolver), bindingAssembly.GetName());
                     NativeLibrary.SetDllImportResolver(bindingAssembly, MacOsFfMpegDllImportResolver);
                 }
                 else
@@ -85,7 +86,7 @@ public class FfMpegConfigureHost(ILogger<FfMpegConfigureHost> logger, IOptions<S
             {
                 var versionInfo = new FfMpegVersionStruct(versionFunc.Invoke());
 
-                libraryVersion.AppendLine($"\tLibrary {libName} version {versionInfo}");
+                libraryVersion.AppendLine($"\tLibrary: {libName} version `{versionInfo}`");
             }
 
             libraryVersion.Remove(libraryVersion.Length - 1, 1);    // remove '\n'
