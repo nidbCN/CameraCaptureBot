@@ -1,5 +1,4 @@
 ﻿using System.IO.IsolatedStorage;
-using System.Net.Mime;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
@@ -230,7 +229,7 @@ internal class BotHost(
                         var buffer = new char[hashData.Length * 2 + 1];
                         for (var i = 0; i < hashData.Length; i += 2)
                         {
-                            var twoChar = ToCharsBuffer(hashData[i]);
+                            var twoChar = ToCharsBuffer(hashData[i], 0x200020u);
                             buffer[i] = (char)(twoChar >> 8);
                             buffer[i + 1] = (char)(twoChar & 0x00FFu);
                         }
