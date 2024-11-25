@@ -33,7 +33,8 @@ internal class BotHost(
         var keyStore = botCtx.UpdateKeystore();
 
         // password Login
-        if (keyStore.Uin != 0 && keyStore.Session.TempPassword is not null)
+        if (keyStore.Uin != 0 &&
+            (keyStore.Session.TempPassword is not null || !string.IsNullOrEmpty(keyStore.PasswordMd5)))
         {
             using var pwdLoginTimeoutTokenSrc = new CancellationTokenSource(TimeSpan.FromMinutes(2));
             using var pwdLoginStoppingTokenSrc = CancellationTokenSource
