@@ -163,11 +163,12 @@ internal class BotHost(
         logger.LogWarning("Need captcha, url: {msg}", @event.Url);
         logger.LogInformation("Input response json string:");
         var json = Console.ReadLine();
+        logger.LogDebug("Receive user input json string `{json}`, start process.", json);
 
         if (json is null || string.IsNullOrWhiteSpace(json))
         {
-            logger.LogError("You input nothing! can't boot.");
-            throw new ApplicationException("Can't boot without captcha.");
+            logger.LogError("Receive empty input string.");
+            throw new ApplicationException("Captcha failed, user input empty.");
         }
 
         try
@@ -192,7 +193,7 @@ internal class BotHost(
                 }
                 else
                 {
-                    throw new ApplicationException("Can't boot without captcha.");
+                    throw new ApplicationException("Captcha failed, ticket or randstr not found.");
                 }
             }
         }
