@@ -48,7 +48,7 @@ jobs:
           upload_url: ${{ github.event.release.upload_url }}
           asset_path: linux-x64.zip
           asset_name: linux-x64.zip
-          content_type: application/zip
+          asset_content_type: application/zip
 
       - name: Upload Artifacts
         uses: actions/upload-release-asset@v1
@@ -56,7 +56,7 @@ jobs:
           upload_url: ${{ github.event.release.upload_url }}
           asset_path: win-x64.zip
           asset_name: win-x64.zip
-          content_type: application/zip
+          asset_content_type: application/zip
 
       - name: Upload Artifacts
         uses: actions/upload-release-asset@v1
@@ -64,4 +64,4 @@ jobs:
           upload_url: ${{ github.event.release.upload_url }}
           asset_path: any-x64.zip
           asset_name: any-x64.zip
-          content_type: application/zip
+          asset_content_type: application/zip
