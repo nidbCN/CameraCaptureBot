@@ -1,0 +1,67 @@
+name: Build and Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Install submodules
+        run: git submodule init && git submodule update
+      - name: Restore dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --no-restore
+
+      # 编译和发布应用程序
+      - name: Build for Linux x64
+        run: dotnet publish -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -o output/linux-x64
+
+      - name: Build for Windows x64
+        run: dotnet publish -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -o output/win-x64
+
+      - name: Build for Portable (any-x64)
+        run: dotnet publish -c Release -r any -p:PublishSingleFile=true -o output/any-x64
+
+      # 压缩编译结果
+      - name: Zip Linux x64
+        run: zip -r linux-x64.zip output/linux-x64
+
+      - name: Zip Windows x64
+        run: zip -r win-x64.zip output/win-x64
+
+      - name: Zip Portable (any-x64)
+        run: zip -r any-x64.zip output/any-x64
+
+      # 上传编译结果到 Release
+      - name: Upload Artifacts
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: linux-x64.zip
+          asset_name: linux-x64.zip
+          content_type: application/zip
+
+      - name: Upload Artifacts
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: win-x64.zip
+          asset_name: win-x64.zip
+          content_type: application/zip
+
+      - name: Upload Artifacts
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: any-x64.zip
+          asset_name: any-x64.zip
+          content_type: application/zip
