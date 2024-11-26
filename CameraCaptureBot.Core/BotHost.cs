@@ -45,10 +45,10 @@ internal class BotHost(
                                       + "copy the response of `cap_union_new_verify` "
                                       + "and paste response json to stdin.");
                 logger.LogInformation("Press Enter and Ctrl-D(send EOF) to finish input and continue login.");
-                
+
                 await using var inputStream = Console.OpenStandardInput();
 
-                CaptchaResult? inputCaptchaResult;
+                CaptchaResult? inputCaptchaResult = null;
 
                 try
                 {
@@ -57,7 +57,6 @@ internal class BotHost(
                 catch (Exception e)
                 {
                     logger.LogError(e, "Deserialize failed!");
-                    throw;
                 }
 
                 await Task.Run(() =>
