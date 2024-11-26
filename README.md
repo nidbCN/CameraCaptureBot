@@ -30,6 +30,13 @@ Build Status: ![Build](https://github.com/nidbCN/CameraCaptureBot/actions/workfl
 * Tag: `latest`
 * Name: `registry.cn-beijing.aliyuncs.com/nidb-cr/camera-capture-bot:latest`
 
+#### Release v8.1.5.6
+
+* Tag: `8.1.5.6`
+* Id: `78e0abb15468ae527be724bc13a6e8ce250b513eb014329ac413719a9c757486`
+* Digest: `2771b4a54d6c557dcba5a8eb0b551f0f9c173ae826d2bec43ff856f26153e9d1`
+* Name: `registry.cn-beijing.aliyuncs.com/nidb-cr/camera-capture-bot:8.1.5.6`
+
 #### Release v8.1.5.4
 
 * Tag: `8.1.5.4`
