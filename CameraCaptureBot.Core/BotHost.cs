@@ -44,6 +44,8 @@ internal class BotHost(
                 logger.LogInformation("Open the link and dev-tools in browser, finish captcha, "
                                       + "copy the response of `cap_union_new_verify` "
                                       + "and paste response json to stdin.");
+                logger.LogInformation("Press Enter and Ctrl-D(send EOF) to finish input and continue login.");
+                
                 await using var inputStream = Console.OpenStandardInput();
 
                 CaptchaResult? inputCaptchaResult;
