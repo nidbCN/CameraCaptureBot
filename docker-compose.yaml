@@ -3,14 +3,16 @@ services:
     image: registry.cn-beijing.aliyuncs.com/nidb-cr/camera-capture-bot:git
     container_name: camera-capture-bot
     tty: true
+    stdin_open: true
     environment:
       - TZ=Asia/Shanghai
+      # - ALL_PROXY=172.17.0.1:7890
     volumes:
       - ./IsolatedStorage/:/root/.local/share/IsolatedStorage/
     configs:
       - source: appsettings
         target: /app/appsettings.json
-    restart: unless-stopped
+    restart: no
 
 configs:
   appsettings:

@@ -1,10 +1,11 @@
 ﻿using System.IO.IsolatedStorage;
-using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using CameraCaptureBot.Core.Configs;
 using CameraCaptureBot.Core.Services;
+using CameraCaptureBot.Core.Utils;
 using Lagrange.Core;
 using Lagrange.Core.Common.Interface.Api;
 using Lagrange.Core.Event.EventArg;
@@ -24,9 +25,7 @@ internal class BotHost(
     IsolatedStorageFile isoStorage)
     : IHostedLifecycleService
 {
-    private Task LoginAsync() => LoginAsync(CancellationToken.None);
-
-    private async Task LoginAsync(CancellationToken stoppingToken)
+    private async Task LoginAsync(CancellationToken stoppingToken = new())
     {
         var loggedIn = false;
         var keyStore = botCtx.UpdateKeystore();
@@ -38,6 +37,40 @@ internal class BotHost(
             using var pwdLoginTimeoutTokenSrc = new CancellationTokenSource(TimeSpan.FromMinutes(2));
             using var pwdLoginStoppingTokenSrc = CancellationTokenSource
                 .CreateLinkedTokenSource(stoppingToken, pwdLoginTimeoutTokenSrc.Token);
+
+            botCtx.Invoker.OnBotCaptchaEvent += async (bot, @event) =>
+            {
+                logger.LogWarning("Need user finish captcha, url: {msg}", @event.Url);
+                logger.LogInformation("Open the link and dev-tools in browser, finish captcha, "
+                                      + "copy the response of `cap_union_new_verify` "
+                                      + "and paste response json to stdin.");
+                await using var inputStream = Console.OpenStandardInput();
+
+                CaptchaResult? inputCaptchaResult;
+
+                try
+                {
+                    inputCaptchaResult = await JsonSerializer.DeserializeAsync<CaptchaResult>(inputStream, cancellationToken: stoppingToken);
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e, "Deserialize failed!");
+                    throw;
+                }
+
+                await Task.Run(() =>
+                {
+                    if (inputCaptchaResult is null)
+                    {
+                        logger.LogError("Deserialize failed, result is null.");
+                    }
+                    else
+                    {
+                        logger.LogInformation("Receive captcha, ticket {t}, rand-str {s}", inputCaptchaResult.Ticket, inputCaptchaResult.RandomString);
+                        bot.SubmitCaptcha(inputCaptchaResult.Ticket, inputCaptchaResult.RandomString);
+                    }
+                }, stoppingToken);
+            };
 
             try
             {
@@ -158,50 +191,14 @@ internal class BotHost(
         }
     }
 
-    private void ProcessCaptcha(BotContext bot, BotCaptchaEvent @event)
+    private record CaptchaResult
     {
-        logger.LogWarning("Need captcha, url: {msg}", @event.Url);
-        logger.LogInformation("Input response json string:");
-        var json = Console.ReadLine();
-        logger.LogDebug("Receive user input json string `{json}`, start process.", json);
+        [JsonPropertyName("ticket")]
+        public required string Ticket { get; init; }
 
-        if (json is null || string.IsNullOrWhiteSpace(json))
-        {
-            logger.LogError("Receive empty input string.");
-            throw new ApplicationException("Captcha failed, user input empty.");
-        }
-
-        try
-        {
-            var jsonObj = JsonSerializer.Deserialize<IDictionary<string, string>>(json);
-
-            if (jsonObj is null)
-            {
-                logger.LogError("Deserialize `{json}` failed, result is null.", json);
-            }
-            else
-            {
-                const string ticket = "ticket";
-                // ReSharper disable once StringLiteralTypo
-                const string randStr = "randstr";
-
-                if (jsonObj.TryGetValue(ticket, out var ticketValue)
-                    && jsonObj.TryGetValue(randStr, out var randStrValue))
-                {
-                    logger.LogInformation("Receive captcha, ticket {t}, rand-str {s}", ticketValue, randStrValue);
-                    bot.SubmitCaptcha(ticketValue, randStrValue);
-                }
-                else
-                {
-                    throw new ApplicationException("Captcha failed, ticket or randstr not found.");
-                }
-            }
-        }
-        catch (Exception e)
-        {
-            logger.LogError(e, "Deserialize failed! str: {s}", json);
-            throw;
-        }
+        // ReSharper disable once StringLiteralTypo
+        [JsonPropertyName("randstr")]
+        public required string RandomString { get; init; }
     }
 
     private async Task ProcessBotOnline(BotContext bot, BotOnlineEvent _)
@@ -216,6 +213,7 @@ internal class BotHost(
 
             var keyStore = botCtx.UpdateKeystore();
 
+            // update password hash
             if (string.IsNullOrEmpty(keyStore.PasswordMd5))
             {
                 if (botOptions.Value.AccountPasswords?.TryGetValue(keyStore.Uin, out var pwd) ?? false)
@@ -230,9 +228,9 @@ internal class BotHost(
                         var buffer = new char[hashData.Length * 2];
                         for (var i = 0; i < hashData.Length; i++)
                         {
-                            var twoChar = ToCharsBuffer(hashData[i], 0x200020u);
-                            buffer[2 * i] = (char)(twoChar >> 16);
-                            buffer[2 * i + 1] = (char)(twoChar & 0x0000FFFFu);
+                            var hex = ByteHex.ByteToHex(hashData[i], ByteHex.HexCasing.LowerCase);
+                            buffer[2 * i] = hex.High;
+                            buffer[2 * i + 1] = hex.Low;
                         }
 
                         keyStore.PasswordMd5 = new(buffer);
@@ -349,14 +347,11 @@ internal class BotHost(
     }
 
     Task IHostedLifecycleService.StartingAsync(CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
-    }
+        => Task.CompletedTask;
 
     Task IHostedService.StartAsync(CancellationToken cancellationToken)
     {
         botCtx.Invoker.OnBotLogEvent += ProcessLog;
-        botCtx.Invoker.OnBotCaptchaEvent += ProcessCaptcha;
         botCtx.Invoker.OnBotOnlineEvent +=
             async (bot, @event) => await ProcessBotOnline(bot, @event);
         botCtx.Invoker.OnBotOfflineEvent += ProcessBotOffline;
@@ -377,25 +372,11 @@ internal class BotHost(
         => Task.CompletedTask;
 
     Task IHostedService.StopAsync(CancellationToken cancellationToken)
-        => Task.CompletedTask;
+    {
+        botCtx.Dispose();
+        return Task.CompletedTask;
+    }
 
     Task IHostedLifecycleService.StoppedAsync(CancellationToken cancellationToken)
         => Task.CompletedTask;
-
-    /// <summary>
-    ///  By Executor-Cheng 
-    /// </summary>
-    /// <see cref="https://github.com/KonataDev/Lagrange.Core/pull/344#pullrequestreview-2027515322"/>
-    /// <param name="value">sign byte</param>
-    /// <param name="casing">0x200020u for lower, 0x00u for upper</param>
-    /// <returns>High 16bit, Low 16 bit</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static uint ToCharsBuffer(byte value, uint casing = 0)
-    {
-        var difference = BitConverter.IsLittleEndian
-            ? ((uint)value >> 4) + ((value & 0x0Fu) << 16) - 0x890089u
-            : ((value & 0xF0u) << 12) + (value & 0x0Fu) - 0x890089u;
-        var packedResult = ((((uint)-(int)difference & 0x700070u) >> 4) + difference + 0xB900B9u) | casing;
-        return packedResult;
-    }
 }
