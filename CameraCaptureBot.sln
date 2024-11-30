@@ -12,6 +12,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "解决方案项", "解决�
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CameraCaptureBot.Host", "CameraCaptureBot.Host\CameraCaptureBot.Host.csproj", "{FDAB8E28-9202-4339-8978-A3AA6311940C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,6 +28,10 @@ Global
 		{5C0128AF-478C-4322-8B08-D6F4D00559F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5C0128AF-478C-4322-8B08-D6F4D00559F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5C0128AF-478C-4322-8B08-D6F4D00559F0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FDAB8E28-9202-4339-8978-A3AA6311940C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FDAB8E28-9202-4339-8978-A3AA6311940C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FDAB8E28-9202-4339-8978-A3AA6311940C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FDAB8E28-9202-4339-8978-A3AA6311940C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
