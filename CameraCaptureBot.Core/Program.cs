@@ -19,7 +19,6 @@ builder.Services.Configure<BotOption>(
 
 builder.Services.AddTransient<BinarySizeFormatter>();
 
-builder.Services.AddSingleton<FfmpegLoggerService>();
 builder.Services.AddSingleton<FfmpegLibWebpEncoder>();
 builder.Services.AddSingleton<CaptureService>();
 builder.Services.AddIsoStorages();

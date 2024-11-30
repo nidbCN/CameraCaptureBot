@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using CameraCaptureBot.Core.Configs;
@@ -9,13 +10,21 @@ using Microsoft.Extensions.Options;
 
 namespace CameraCaptureBot.Core;
 
-public class FfMpegConfigureHost(ILogger<FfMpegConfigureHost> logger, IOptions<StreamOption> options)
+public class FfMpegConfigureHost(
+    ILogger<FfMpegConfigureHost> logger,
+    IOptions<StreamOption> streamOptions,
+    IOptions<LoggerFilterOptions> loggerOptions)
     : IHostedLifecycleService
 {
+    // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
+    private av_log_set_callback_callback? _logCallback;
+
+    private const int LineSize = 1024;
+
     private void ConfigureFfMpegLibrary()
     {
         // use linked
-        if (options.Value.FfMpegLibrariesPath is null)
+        if (streamOptions.Value.FfMpegLibrariesPath is null)
         {
             logger.LogInformation("ffmpeg library path not set, use {bind}.", nameof(FFmpeg.AutoGen.Bindings.DynamicallyLinked));
 
@@ -44,9 +53,9 @@ public class FfMpegConfigureHost(ILogger<FfMpegConfigureHost> logger, IOptions<S
         }
         else
         {
-            DynamicallyLoadedBindings.LibrariesPath = options.Value.FfMpegLibrariesPath;
+            DynamicallyLoadedBindings.LibrariesPath = streamOptions.Value.FfMpegLibrariesPath;
 
-            if (options.Value.FfMpegLibrariesPath == string.Empty)
+            if (streamOptions.Value.FfMpegLibrariesPath == string.Empty)
             {
                 logger.LogInformation("ffmpeg library path set to system default search path, use {bind}.",
                     nameof(FFmpeg.AutoGen.Bindings.DynamicallyLoaded));
@@ -54,7 +63,7 @@ public class FfMpegConfigureHost(ILogger<FfMpegConfigureHost> logger, IOptions<S
             else
             {
                 logger.LogInformation("ffmpeg library path set to `{path}`, use {bind}.",
-                    DynamicallyLoadedBindings.LibrariesPath = options.Value.FfMpegLibrariesPath,
+                    DynamicallyLoadedBindings.LibrariesPath = streamOptions.Value.FfMpegLibrariesPath,
                     nameof(FFmpeg.AutoGen.Bindings.DynamicallyLoaded));
             }
 
@@ -93,7 +102,6 @@ public class FfMpegConfigureHost(ILogger<FfMpegConfigureHost> logger, IOptions<S
     public static IntPtr MacOsFfMpegDllImportResolver(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
         => FfMpegDllImportResolverCore(libraryName, assembly, searchPath, "dylib");
 
-
     public static IntPtr FfMpegDllImportResolverCore(string libraryName, Assembly assembly, DllImportSearchPath? searchPath, string extension)
     {
         var libraryNameSpan = libraryName.AsSpan();
@@ -119,9 +127,87 @@ public class FfMpegConfigureHost(ILogger<FfMpegConfigureHost> logger, IOptions<S
         return NativeLibrary.Load(styledName, assembly, searchPath);
     }
 
+    private void ConfigureFfMpegLogger()
+    {
+        // 设置日志
+        var level = loggerOptions.Value.MinLevel switch
+        {
+            LogLevel.Trace => ffmpeg.AV_LOG_TRACE,
+            LogLevel.Debug => ffmpeg.AV_LOG_DEBUG,
+            LogLevel.Information => ffmpeg.AV_LOG_INFO,
+            LogLevel.Warning => ffmpeg.AV_LOG_WARNING,
+            LogLevel.Error => ffmpeg.AV_LOG_ERROR,
+            LogLevel.Critical => ffmpeg.AV_LOG_PANIC,
+            LogLevel.None => ffmpeg.AV_LOG_QUIET,
+            _ => ffmpeg.AV_LOG_INFO
+        };
+
+        unsafe
+        {
+            _logCallback = FfMpegLogInvoke;
+            ffmpeg.av_log_set_level(level);
+            ffmpeg.av_log_set_callback(_logCallback);
+        }
+    }
+
+    private unsafe void FfMpegLogInvoke(void* p0, int level, string format, byte* vl)
+    {
+        if (level > ffmpeg.av_log_get_level()) return;
+
+        var buffer = stackalloc byte[LineSize];
+        var printPrefix = ffmpeg.AV_LOG_SKIP_REPEATED | ffmpeg.AV_LOG_PRINT_LEVEL;
+
+        ffmpeg.av_log_format_line(p0, level, format, vl, buffer, LineSize, &printPrefix);
+
+        // count string
+        var textBufferSize = 0;
+        while (buffer[textBufferSize++] != 0) { }
+
+        // empty string
+        if (textBufferSize == 1) return;
+
+        var textBuffer = new char[textBufferSize];
+        var textBufferSpan = new Span<char>(textBuffer);
+
+        for (var i = 0; i < textBufferSize; i++)
+        {
+            textBufferSpan[i] = (char)buffer[i];
+        }
+
+        var text = new string(textBufferSpan);
+
+        using (logger.BeginScope(nameof(ffmpeg)))
+        {
+#pragma warning disable CA2254
+            Action<string> logInvoke = level switch
+            {
+                ffmpeg.AV_LOG_PANIC => msg => logger.LogCritical(msg),
+                ffmpeg.AV_LOG_FATAL => msg => logger.LogCritical(msg),
+                ffmpeg.AV_LOG_ERROR => msg => logger.LogError(msg),
+                ffmpeg.AV_LOG_WARNING => msg => logger.LogWarning(msg),
+                ffmpeg.AV_LOG_INFO => msg => logger.LogInformation(msg),
+                ffmpeg.AV_LOG_VERBOSE => msg => logger.LogDebug(msg),
+                ffmpeg.AV_LOG_DEBUG => msg => logger.LogDebug(msg),
+                ffmpeg.AV_LOG_TRACE => msg => logger.LogTrace(msg),
+                _ => LogUnknown,
+            };
+#pragma warning restore CA2254
+
+            logInvoke.Invoke(text);
+        }
+
+        return;
+
+        void LogUnknown(string message)
+        {
+            logger.LogWarning("Log unknown level:{level}, msg: {msg}", level, message);
+        }
+    }
+
     public Task StartingAsync(CancellationToken cancellationToken)
     {
         ConfigureFfMpegLibrary();
+        ConfigureFfMpegLogger();
         return Task.CompletedTask;
     }
     public Task StartAsync(CancellationToken cancellationToken)
