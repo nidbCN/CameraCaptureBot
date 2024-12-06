@@ -1,13 +1,13 @@
-﻿using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System.Net;
+﻿using System.Net;
 using System.Text.Json;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using StreamCaptureBot.Utils.Extensions;
 using VideoStreamCaptureBot.Impl.Tencent.Options;
 using VideoStreamCaptureBot.Impl.Tencent.Protocols;
 using VideoStreamCaptureBot.Impl.Tencent.Protocols.EventContents;
 using VideoStreamCaptureBot.Impl.Tencent.Utils.Sign;
-using Microsoft.Extensions.Options;
-using StreamCaptureBot.Utils.Extensions;
 
 namespace VideoStreamCaptureBot.Impl.Tencent;
 
@@ -63,9 +63,10 @@ public class TencentWebhookWorker(
                         }, cancellationToken: stoppingToken);
 
                         break;
+                    default:
+                        resp.StatusCode = (int)HttpStatusCode.Forbidden;
+                        break;
                 }
-
-                resp.StatusCode = (int)HttpStatusCode.Forbidden;
             }
         }, stoppingToken);
 

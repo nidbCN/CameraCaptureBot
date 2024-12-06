@@ -1,6 +1,6 @@
-﻿using VideoStreamCaptureBot.Core.Extensions;
+﻿using FFmpeg.AutoGen.Abstractions;
+using VideoStreamCaptureBot.Core.Extensions;
 using VideoStreamCaptureBot.Core.Utils;
-using FFmpeg.AutoGen.Abstractions;
 
 namespace VideoStreamCaptureBot.Core.Codecs;
 

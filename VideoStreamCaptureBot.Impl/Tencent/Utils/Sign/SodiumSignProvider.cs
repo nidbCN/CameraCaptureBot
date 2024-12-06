@@ -1,8 +1,8 @@
-﻿using Sodium;
-using System.Text;
-using VideoStreamCaptureBot.Impl.Tencent.Options;
+﻿using System.Text;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Sodium;
+using VideoStreamCaptureBot.Impl.Tencent.Options;
 
 namespace VideoStreamCaptureBot.Impl.Tencent.Utils.Sign;
 public class SodiumSignProvider : ISignProvider

@@ -1,11 +1,11 @@
 ﻿using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
-using VideoStreamCaptureBot.Core.Configs;
 using FFmpeg.AutoGen.Abstractions;
 using FFmpeg.AutoGen.Bindings.DynamicallyLinked;
 using FFmpeg.AutoGen.Bindings.DynamicallyLoaded;
 using Microsoft.Extensions.Options;
+using VideoStreamCaptureBot.Core.Configs;
 
 namespace VideoStreamCaptureBot.Core;
 

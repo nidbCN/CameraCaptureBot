@@ -1,13 +1,14 @@
 using VideoStreamCaptureBot.Core;
 using VideoStreamCaptureBot.Core.Codecs;
 using VideoStreamCaptureBot.Core.Configs;
-using VideoStreamCaptureBot.Core.Extensions.DependencyInjection;
 using VideoStreamCaptureBot.Core.Services;
 using VideoStreamCaptureBot.Core.Utils;
+using VideoStreamCaptureBot.Impl.Tencent.Extensions.DependencyInjection;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-builder.UseLagrangeBots();
+//builder.UseLagrangeBots();
+builder.UseTencentBots();
 
 builder.Services.AddWindowsService(s =>
 {

@@ -1,8 +1,8 @@
-using VideoStreamCaptureBot.Core.Configs;
 using Lagrange.Core;
 using Lagrange.Core.Common.Interface.Api;
 using Lagrange.Core.Message;
 using Microsoft.Extensions.Options;
+using VideoStreamCaptureBot.Core.Configs;
 
 namespace VideoStreamCaptureBot.Core;
 
