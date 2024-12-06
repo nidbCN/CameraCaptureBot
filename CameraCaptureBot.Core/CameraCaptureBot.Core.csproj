@@ -30,5 +30,6 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\Lagrange.Core\Lagrange.Core\Lagrange.Core.csproj" />
+	  <ProjectReference Include="..\StreamCaptureBot.Utils\StreamCaptureBot.Utils.csproj" />
 	</ItemGroup>
 </Project>

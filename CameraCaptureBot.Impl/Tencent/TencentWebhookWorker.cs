@@ -54,6 +54,7 @@ public class TencentWebhookWorker(
                         var content = payload.EventContent as HttpCallbackVerify;
                         var signed = signProvider.Sign(content.EventTimespan + content.PlainToken);
 
+                        resp.StatusCode = (int)HttpStatusCode.OK;
                         break;
                 }
 

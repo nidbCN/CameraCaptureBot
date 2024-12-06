@@ -1,7 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace CameraCaptureBot.Core.Utils;
+namespace StreamCaptureBot.Utils;
 
 [StructLayout(LayoutKind.Explicit)]
 public struct ByteHex
@@ -14,7 +14,7 @@ public struct ByteHex
     /// <param name="casing">0x200020u for lower, 0x00u for upper</param>
     /// <returns>High 16bit, Low 16 bit</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ByteHex ByteToHex(byte data, HexCasing casing)
+    public static ByteHex ByteToHex(byte data, HexCasing casing = HexCasing.LowerCase)
     {
         var difference = BitConverter.IsLittleEndian
             ? ((uint)data >> 4) + ((data & 0x0Fu) << 16) - 0x0089_0089u

@@ -12,6 +12,7 @@ using Lagrange.Core.Event.EventArg;
 using Lagrange.Core.Message;
 using Lagrange.Core.Message.Entity;
 using Microsoft.Extensions.Options;
+using StreamCaptureBot.Utils.Extensions;
 using BotLogLevel = Lagrange.Core.Event.EventArg.LogLevel;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
@@ -61,23 +62,9 @@ internal class LagrangeHost(
             {
                 if (botOptions.Value.LagrangeBotConfig.AccountPasswords?.TryGetValue(keyStore.Uin, out var pwd) ?? false)
                 {
-                    if (pwd.Hashed)
-                    {
-                        keyStore.PasswordMd5 = pwd.Password;
-                    }
-                    else
-                    {
-                        var hashData = MD5.HashData(Encoding.UTF8.GetBytes(pwd.Password));
-                        var buffer = new char[hashData.Length * 2];
-                        for (var i = 0; i < hashData.Length; i++)
-                        {
-                            var hex = ByteHex.ByteToHex(hashData[i], ByteHex.HexCasing.LowerCase);
-                            buffer[2 * i] = hex.High;
-                            buffer[2 * i + 1] = hex.Low;
-                        }
-
-                        keyStore.PasswordMd5 = new(buffer);
-                    }
+                    keyStore.PasswordMd5 = pwd.Hashed
+                        ? pwd.Password
+                        : new(Encoding.UTF8.GetBytes(pwd.Password).ToMd5Hex());
                 }
             }
 

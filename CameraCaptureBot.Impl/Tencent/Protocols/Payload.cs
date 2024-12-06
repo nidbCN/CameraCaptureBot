@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using CameraCaptureBot.Impl.Tencent.Protocols.Serialization;
 
 namespace CameraCaptureBot.Impl.Tencent.Protocols;
 
@@ -16,6 +17,7 @@ public record Payload
     [JsonPropertyName(OperationCodeProp)]
     public required OperationCode OperationCode { get; set; }
 
+    [JsonConverter(typeof(JsonEventContentConverter))]
     [JsonPropertyName(EventContentProp)]
     public required object EventContent { get; set; } = null!;
 

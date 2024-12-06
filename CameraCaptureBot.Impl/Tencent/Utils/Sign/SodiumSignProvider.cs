@@ -3,7 +3,6 @@ using System.Text;
 using CameraCaptureBot.Impl.Tencent.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace CameraCaptureBot.Impl.Tencent.Utils.Sign;
 public class SodiumSignProvider : ISignProvider
