@@ -1,6 +1,6 @@
 ﻿using System.Buffers;
 
-namespace CameraCaptureBot.Core.Codecs;
+namespace VideoStreamCaptureBot.Core.Codecs;
 
 public class CodecResultStream : Stream
 {

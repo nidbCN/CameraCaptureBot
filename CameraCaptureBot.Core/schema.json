@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft-07/schema#",
   "title": "Product",
-  "description": "CameraCaptureBot appsettings.",
+  "description": "VideoStreamCaptureBot appsettings.",
   "type": "object",
   "properties": {
     "StreamOption": {

@@ -1,11 +1,11 @@
 ﻿using System.IO.IsolatedStorage;
 using System.Text.Json;
-using CameraCaptureBot.Core.Bots.LagrangeBot;
-using CameraCaptureBot.Core.Configs;
+using VideoStreamCaptureBot.Core.Bots.LagrangeBot;
+using VideoStreamCaptureBot.Core.Configs;
 using Lagrange.Core.Common;
 using Lagrange.Core.Common.Interface;
 
-namespace CameraCaptureBot.Core.Extensions.DependencyInjection;
+namespace VideoStreamCaptureBot.Core.Extensions.DependencyInjection;
 public static class HostApplicationBuilderExtension
 {
     public static IHostApplicationBuilder UseLagrangeBots(this IHostApplicationBuilder builder)

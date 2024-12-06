@@ -1,6 +1,6 @@
-﻿using CameraCaptureBot.Core.Services;
+﻿using VideoStreamCaptureBot.Core.Services;
 
-namespace CameraCaptureBot.Core.Controllers;
+namespace VideoStreamCaptureBot.Core.Controllers;
 
 public class BotController(
     ILogger<BotController> logger,

@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using FFmpeg.AutoGen.Abstractions;
 
-namespace CameraCaptureBot.Core.Extensions;
+namespace VideoStreamCaptureBot.Core.Extensions;
 public static class FfMpegExtension
 {
     public static unsafe string? av_strerror(int error)

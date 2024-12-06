@@ -1,4 +1,4 @@
-﻿namespace CameraCaptureBot.Core.Configs;
+﻿namespace VideoStreamCaptureBot.Core.Configs;
 
 public record StreamOption
 {

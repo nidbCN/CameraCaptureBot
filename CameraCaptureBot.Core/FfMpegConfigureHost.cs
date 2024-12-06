@@ -1,13 +1,13 @@
 ﻿using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
-using CameraCaptureBot.Core.Configs;
+using VideoStreamCaptureBot.Core.Configs;
 using FFmpeg.AutoGen.Abstractions;
 using FFmpeg.AutoGen.Bindings.DynamicallyLinked;
 using FFmpeg.AutoGen.Bindings.DynamicallyLoaded;
 using Microsoft.Extensions.Options;
 
-namespace CameraCaptureBot.Core;
+namespace VideoStreamCaptureBot.Core;
 
 public class FfMpegConfigureHost(
     ILogger<FfMpegConfigureHost> logger,

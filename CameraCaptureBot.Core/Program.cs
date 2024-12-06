@@ -1,9 +1,9 @@
-using CameraCaptureBot.Core;
-using CameraCaptureBot.Core.Codecs;
-using CameraCaptureBot.Core.Configs;
-using CameraCaptureBot.Core.Extensions.DependencyInjection;
-using CameraCaptureBot.Core.Services;
-using CameraCaptureBot.Core.Utils;
+using VideoStreamCaptureBot.Core;
+using VideoStreamCaptureBot.Core.Codecs;
+using VideoStreamCaptureBot.Core.Configs;
+using VideoStreamCaptureBot.Core.Extensions.DependencyInjection;
+using VideoStreamCaptureBot.Core.Services;
+using VideoStreamCaptureBot.Core.Utils;
 
 var builder = Host.CreateApplicationBuilder(args);
 

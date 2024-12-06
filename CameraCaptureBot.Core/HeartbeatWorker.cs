@@ -1,10 +1,10 @@
-using CameraCaptureBot.Core.Configs;
+using VideoStreamCaptureBot.Core.Configs;
 using Lagrange.Core;
 using Lagrange.Core.Common.Interface.Api;
 using Lagrange.Core.Message;
 using Microsoft.Extensions.Options;
 
-namespace CameraCaptureBot.Core;
+namespace VideoStreamCaptureBot.Core;
 
 public class HeartBeatWorker(ILogger<HeartBeatWorker> logger,
     BotContext botCtx,
@@ -27,7 +27,7 @@ public class HeartBeatWorker(ILogger<HeartBeatWorker> logger,
 
                 var headers = botOptions.Value.NotificationConfig.WebhookHeaders;
                 var resp = await _httpClient
-                    .PostAsync(url, new StringContent($@"Time: `{DateTime.Now:s}`, {nameof(CameraCaptureBot)} alive\."), stoppingToken);
+                    .PostAsync(url, new StringContent($@"Time: `{DateTime.Now:s}`, {nameof(VideoStreamCaptureBot)} alive\."), stoppingToken);
                 if (!resp.IsSuccessStatusCode)
                 {
                     logger.LogInformation("Webhook heartbeat invoked, {code} {msg}.", resp.StatusCode, resp.ReasonPhrase);
@@ -47,7 +47,7 @@ public class HeartBeatWorker(ILogger<HeartBeatWorker> logger,
                     {
                         var message = MessageBuilder
                             .Friend(account)
-                            .Text($"Time: {DateTime.Now:s}, {nameof(CameraCaptureBot)} alive.")
+                            .Text($"Time: {DateTime.Now:s}, {nameof(VideoStreamCaptureBot)} alive.")
                             .Build();
                         await botCtx.SendMessage(message);
                         logger.LogInformation("Bot heartbeat invoked.");

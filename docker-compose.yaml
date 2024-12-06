@@ -1,5 +1,5 @@
 services:
-  CameraCaptureBot:
+  VideoStreamCaptureBot:
     image: registry.cn-beijing.aliyuncs.com/nidb-cr/camera-capture-bot:git
     container_name: camera-capture-bot
     tty: true
@@ -16,4 +16,4 @@ services:
 
 configs:
   appsettings:
-    file: ./CameraCaptureBot.Core/appsettings.json
+    file: ./VideoStreamCaptureBot.Core/appsettings.json

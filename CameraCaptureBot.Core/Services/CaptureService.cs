@@ -1,11 +1,11 @@
-﻿using CameraCaptureBot.Core.Codecs;
-using CameraCaptureBot.Core.Configs;
-using CameraCaptureBot.Core.Extensions;
-using CameraCaptureBot.Core.Utils;
+﻿using VideoStreamCaptureBot.Core.Codecs;
+using VideoStreamCaptureBot.Core.Configs;
+using VideoStreamCaptureBot.Core.Extensions;
+using VideoStreamCaptureBot.Core.Utils;
 using FFmpeg.AutoGen.Abstractions;
 using Microsoft.Extensions.Options;
 
-namespace CameraCaptureBot.Core.Services;
+namespace VideoStreamCaptureBot.Core.Services;
 
 public readonly unsafe struct AvCodecContextWrapper(AVCodecContext* ctx)
 {

@@ -1,9 +1,9 @@
 ﻿using System.Runtime.InteropServices;
-using CameraCaptureBot.Core.Extensions;
-using CameraCaptureBot.Core.Utils;
+using VideoStreamCaptureBot.Core.Extensions;
+using VideoStreamCaptureBot.Core.Utils;
 using FFmpeg.AutoGen.Abstractions;
 
-namespace CameraCaptureBot.Core.Codecs;
+namespace VideoStreamCaptureBot.Core.Codecs;
 
 public class CodecBase(ILogger logger, BinarySizeFormatter binarySizeFormat) : IDisposable
 {

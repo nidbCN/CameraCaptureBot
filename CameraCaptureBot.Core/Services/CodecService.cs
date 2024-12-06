@@ -1,4 +1,4 @@
-﻿namespace CameraCaptureBot.Core.Services;
+﻿namespace VideoStreamCaptureBot.Core.Services;
 
 public class CodecService
 {

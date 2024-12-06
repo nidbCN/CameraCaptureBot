@@ -1,4 +1,4 @@
-﻿namespace CameraCaptureBot.Core.Utils;
+﻿namespace VideoStreamCaptureBot.Core.Utils;
 
 public sealed class BinarySizeFormatter : IFormatProvider, ICustomFormatter
 {

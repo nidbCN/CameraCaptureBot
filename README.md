@@ -1,18 +1,18 @@
-# CameraCaptureBot
+# VideoStreamCaptureBot
 
-Build Status: ![Build](https://github.com/nidbCN/CameraCaptureBot/actions/workflows/dotnet.yml/badge.svg)
+Build Status: ![Build](https://github.com/nidbCN/VideoStreamCaptureBot/actions/workflows/dotnet.yml/badge.svg)
 
 ## 文档
 
-[快速开始](https://github.com/nidbCN/CameraCaptureBot/wiki#%E5%BC%80%E5%A7%8B%E4%BD%BF%E7%94%A8)
+[快速开始](https://github.com/nidbCN/VideoStreamCaptureBot/wiki#%E5%BC%80%E5%A7%8B%E4%BD%BF%E7%94%A8)
 
-[参考文档](https://github.com/nidbCN/CameraCaptureBot/wiki/%E5%8F%82%E8%80%83)
+[参考文档](https://github.com/nidbCN/VideoStreamCaptureBot/wiki/%E5%8F%82%E8%80%83)
 
 ## 发行版
 
 ### 源码
 
-见 [Releases · nidbCN/CameraCaptureBot](https://github.com/nidbCN/CameraCaptureBot/releases)。
+见 [Releases · nidbCN/VideoStreamCaptureBot](https://github.com/nidbCN/VideoStreamCaptureBot/releases)。
 
 ### 容器镜像
 

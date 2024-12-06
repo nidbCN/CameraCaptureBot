@@ -3,9 +3,9 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using CameraCaptureBot.Core.Configs;
-using CameraCaptureBot.Core.Controllers;
-using CameraCaptureBot.Core.Utils;
+using VideoStreamCaptureBot.Core.Configs;
+using VideoStreamCaptureBot.Core.Controllers;
+using VideoStreamCaptureBot.Core.Utils;
 using Lagrange.Core;
 using Lagrange.Core.Common.Interface.Api;
 using Lagrange.Core.Event.EventArg;
@@ -16,7 +16,7 @@ using StreamCaptureBot.Utils.Extensions;
 using BotLogLevel = Lagrange.Core.Event.EventArg.LogLevel;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
-namespace CameraCaptureBot.Core.Bots.LagrangeBot;
+namespace VideoStreamCaptureBot.Core.Bots.LagrangeBot;
 internal class LagrangeHost(
     ILogger<LagrangeHost> logger,
     IHostApplicationLifetime appLifetime,

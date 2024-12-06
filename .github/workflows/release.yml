@@ -23,30 +23,30 @@ jobs:
 
       # 编译和发布应用程序
       - name: Build for Linux x64
-        run: dotnet publish "./CameraCaptureBot.Core/CameraCaptureBot.Core.csproj" -c Release -r linux-x64 --self-contained -o output/linux-x64
+        run: dotnet publish "./VideoStreamCaptureBot.Core/VideoStreamCaptureBot.Core.csproj" -c Release -r linux-x64 --self-contained -o output/linux-x64
 
       - name: Build for Windows x64
-        run: dotnet publish "./CameraCaptureBot.Core/CameraCaptureBot.Core.csproj" -c Release -r win-x64 --self-contained -o output/win-x64
+        run: dotnet publish "./VideoStreamCaptureBot.Core/VideoStreamCaptureBot.Core.csproj" -c Release -r win-x64 --self-contained -o output/win-x64
 
       - name: Build for Portable (any-x64)
-        run: dotnet publish "./CameraCaptureBot.Core/CameraCaptureBot.Core.csproj" -c Release -o output/any-x64
+        run: dotnet publish "./VideoStreamCaptureBot.Core/VideoStreamCaptureBot.Core.csproj" -c Release -o output/any-x64
 
       # 压缩编译结果
       - name: Zip Linux x64
-        run: zip -r CameraCaptureBot_with-runtime_linux-x64.zip output/linux-x64
+        run: zip -r VideoStreamCaptureBot_with-runtime_linux-x64.zip output/linux-x64
 
       - name: Zip Windows x64
-        run: zip -r CameraCaptureBot_with-runtime_win-x64.zip output/win-x64
+        run: zip -r VideoStreamCaptureBot_with-runtime_win-x64.zip output/win-x64
 
       - name: Zip Portable (any-x64)
-        run: zip -r CameraCaptureBot_no-runtime_any-x64.zip output/any-x64
+        run: zip -r VideoStreamCaptureBot_no-runtime_any-x64.zip output/any-x64
 
       - name: Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            CameraCaptureBot_with-runtime_linux-x64.zip
-            CameraCaptureBot_with-runtime_win-x64.zip
-            CameraCaptureBot_no-runtime_any-x64.zip
+            VideoStreamCaptureBot_with-runtime_linux-x64.zip
+            VideoStreamCaptureBot_with-runtime_win-x64.zip
+            VideoStreamCaptureBot_no-runtime_any-x64.zip
 

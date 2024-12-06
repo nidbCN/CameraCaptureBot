@@ -1,9 +1,9 @@
 ﻿using System.Runtime.InteropServices;
-using CameraCaptureBot.Core.Extensions;
-using CameraCaptureBot.Core.Services;
+using VideoStreamCaptureBot.Core.Extensions;
+using VideoStreamCaptureBot.Core.Services;
 using FFmpeg.AutoGen.Abstractions;
 
-namespace CameraCaptureBot.Core.Utils;
+namespace VideoStreamCaptureBot.Core.Utils;
 
 public static class FfMpegUtils
 {

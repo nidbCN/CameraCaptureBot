@@ -1,4 +1,4 @@
-﻿namespace CameraCaptureBot.Core.Controllers;
+﻿namespace VideoStreamCaptureBot.Core.Controllers;
 
 public class ImageController
 {
