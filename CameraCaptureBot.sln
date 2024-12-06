@@ -5,6 +5,8 @@ VisualStudioVersion = 17.8.34408.163
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CameraCaptureBot.Core", "CameraCaptureBot.Core\CameraCaptureBot.Core.csproj", "{3789A3DB-6ABB-4966-AC8F-821DA758EDED}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CameraCaptureBot.Impl.Tencent", "CameraCaptureBot.Impl\Tencent\CameraCaptureBot.Impl.Tencent.csproj", "{D7BD41EE-DB70-4132-ACF1-8874EE5D84A0}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lagrange.Core", "Lagrange.Core\Lagrange.Core\Lagrange.Core.csproj", "{5C0128AF-478C-4322-8B08-D6F4D00559F0}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "解决方案项", "解决方案项", "{6A372DD0-BE70-4314-835A-0E95E250A29C}"
@@ -12,7 +14,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "解决方案项", "解决�
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CameraCaptureBot.Host", "CameraCaptureBot.Host\CameraCaptureBot.Host.csproj", "{FDAB8E28-9202-4339-8978-A3AA6311940C}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CameraCaptureBot.Impl", "CameraCaptureBot.Impl", "{6CCA3E90-0A1C-4410-BD3A-457339FE89A4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,17 +26,20 @@ Global
 		{3789A3DB-6ABB-4966-AC8F-821DA758EDED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3789A3DB-6ABB-4966-AC8F-821DA758EDED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3789A3DB-6ABB-4966-AC8F-821DA758EDED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D7BD41EE-DB70-4132-ACF1-8874EE5D84A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D7BD41EE-DB70-4132-ACF1-8874EE5D84A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D7BD41EE-DB70-4132-ACF1-8874EE5D84A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D7BD41EE-DB70-4132-ACF1-8874EE5D84A0}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5C0128AF-478C-4322-8B08-D6F4D00559F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5C0128AF-478C-4322-8B08-D6F4D00559F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5C0128AF-478C-4322-8B08-D6F4D00559F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5C0128AF-478C-4322-8B08-D6F4D00559F0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FDAB8E28-9202-4339-8978-A3AA6311940C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FDAB8E28-9202-4339-8978-A3AA6311940C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FDAB8E28-9202-4339-8978-A3AA6311940C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FDAB8E28-9202-4339-8978-A3AA6311940C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{D7BD41EE-DB70-4132-ACF1-8874EE5D84A0} = {6CCA3E90-0A1C-4410-BD3A-457339FE89A4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0BF666F4-2E29-4001-8A48-96FD35369224}

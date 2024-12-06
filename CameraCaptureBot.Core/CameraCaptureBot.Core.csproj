@@ -31,8 +31,4 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\Lagrange.Core\Lagrange.Core\Lagrange.Core.csproj" />
 	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Bots\TencentBot\" />
-	</ItemGroup>
 </Project>

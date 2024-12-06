@@ -19,7 +19,6 @@ public record BotOption
     public Implement BotImplement { get; set; } = Implement.Tencent;
 
     public LagrangeBotConfig LagrangeBotConfig { get; set; } = new();
-    public TencentBotConfig TencentBotConfig { get; set; } = new();
 }
 
 public record NotificationConfig
