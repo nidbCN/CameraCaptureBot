@@ -2,9 +2,10 @@
 
 public interface ISignProvider
 {
-    void GenerateKey();
-    void GenerateKey(string seed);
+    public void GenerateKey();
+    public void GenerateKey(string seed);
+    public void GenerateKey(byte[] seed);
 
-    void Sign(string message);
-    void Sign(byte[] data);
+    public byte[] Sign(string message);
+    public byte[] Sign(byte[] data);
 }

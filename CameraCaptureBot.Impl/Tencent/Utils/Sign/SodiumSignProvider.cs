@@ -3,14 +3,19 @@ using System.Text;
 using CameraCaptureBot.Impl.Tencent.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace CameraCaptureBot.Impl.Tencent.Utils.Sign;
 public class SodiumSignProvider : ISignProvider
 {
+    #region Fields
     private readonly ILogger<SodiumSignProvider>? _logger;
     private readonly IOptions<TencentImplOption>? _options;
 
     private KeyPair? _key;
+    #endregion
+
+    #region Props
 
     public KeyPair Key
     {
@@ -18,10 +23,16 @@ public class SodiumSignProvider : ISignProvider
         {
             if (_key is null)
                 GenerateKey();
+
             return _key!;
         }
+
+        private set => _key = value;
     }
 
+    #endregion
+
+    #region Ctor
     public SodiumSignProvider() { }
 
     public SodiumSignProvider(ILogger<SodiumSignProvider> logger, IOptions<TencentImplOption> options)
@@ -38,19 +49,26 @@ public class SodiumSignProvider : ISignProvider
 
         GenerateKey(botSecret);
     }
+    #endregion
 
+    #region Methods
     public void GenerateKey()
-        => _key = PublicKeyAuth.GenerateKeyPair();
+        => Key = PublicKeyAuth.GenerateKeyPair();
 
     public void GenerateKey(string seed)
     {
         var data = Encoding.ASCII.GetBytes(seed);
-        _key = PublicKeyAuth.GenerateKeyPair(data);
+        GenerateKey(data);
     }
 
-    public void Sign(string message)
+    public void GenerateKey(byte[] seed)
+    => Key = PublicKeyAuth.GenerateKeyPair(seed);
+
+    public byte[] Sign(string message)
         => Sign(Encoding.UTF8.GetBytes(message));
 
-    public void Sign(byte[] data)
+    public byte[] Sign(byte[] data)
         => PublicKeyAuth.SignDetached(data, Key.PrivateKey);
+    #endregion
+
 }
