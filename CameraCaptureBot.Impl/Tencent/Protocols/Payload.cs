@@ -1,22 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
-
+﻿using System.Text.Json.Serialization;
 
 namespace CameraCaptureBot.Impl.Tencent.Protocols;
-public record Payload<T> where T : new()
+
+public record Payload
 {
+    [JsonIgnore]
+    public const string OperationCodeProp = "op";
+
+    [JsonIgnore]
+    public const string EventContentProp = "d";
+
     [JsonPropertyName("id")]
     public required string EventId { get; set; }
 
-    [JsonPropertyName("op")]
+    [JsonPropertyName(OperationCodeProp)]
     public required OperationCode OperationCode { get; set; }
 
-    [JsonPropertyName("d")]
-    public required T Content { get; set; }
+    [JsonPropertyName(EventContentProp)]
+    public required object EventContent { get; set; } = null!;
 
     [JsonPropertyName("s")]
     public required uint Sequence { get; set; }

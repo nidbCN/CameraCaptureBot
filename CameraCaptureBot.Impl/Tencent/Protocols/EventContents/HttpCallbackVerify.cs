@@ -1,6 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 
 namespace CameraCaptureBot.Impl.Tencent.Protocols.EventContents;
+
 public record HttpCallbackVerify
 {
     [JsonPropertyName("plain_token")]
