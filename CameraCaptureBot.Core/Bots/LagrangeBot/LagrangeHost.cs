@@ -51,7 +51,7 @@ internal class LagrangeHost(
         // save device info and keystore
         try
         {
-            await using var deviceInfoFileStream = isoStorage.OpenFile(botOptions.Value.DeviceInfoFile, FileMode.OpenOrCreate, FileAccess.Write);
+            await using var deviceInfoFileStream = isoStorage.OpenFile(botOptions.Value.LagrangeBotConfig.DeviceInfoFile, FileMode.OpenOrCreate, FileAccess.Write);
             await JsonSerializer.SerializeAsync(deviceInfoFileStream, botCtx.UpdateDeviceInfo());
 
             var keyStore = botCtx.UpdateKeystore();
@@ -59,7 +59,7 @@ internal class LagrangeHost(
             // update password hash
             if (string.IsNullOrEmpty(keyStore.PasswordMd5))
             {
-                if (botOptions.Value.AccountPasswords?.TryGetValue(keyStore.Uin, out var pwd) ?? false)
+                if (botOptions.Value.LagrangeBotConfig.AccountPasswords?.TryGetValue(keyStore.Uin, out var pwd) ?? false)
                 {
                     if (pwd.Hashed)
                     {
@@ -81,7 +81,7 @@ internal class LagrangeHost(
                 }
             }
 
-            await using var keyFileStream = isoStorage.OpenFile(botOptions.Value.KeyStoreFile, FileMode.OpenOrCreate, FileAccess.Write);
+            await using var keyFileStream = isoStorage.OpenFile(botOptions.Value.LagrangeBotConfig.KeyStoreFile, FileMode.OpenOrCreate, FileAccess.Write);
             await JsonSerializer.SerializeAsync(keyFileStream, keyStore);
         }
         catch (Exception e)
@@ -159,13 +159,13 @@ internal class LagrangeHost(
                     messageBuilder.Image(resp.Image);
                 }
 
-                await botCtx.SendMessage(messageBuilder.Build());
+                await thisBot.SendMessage(messageBuilder.Build());
             }
             else
             {
                 logger.LogWarning("UnAllowed user, {user type} {id}.", isGroup ? "group" : "user", replyUin);
                 var userType = isGroup ? "群组" : "用户";
-                await botCtx.SendMessage(messageBuilder
+                await thisBot.SendMessage(messageBuilder
                     .Text($"杰哥，你...你干嘛啊（{userType}不在白名单）")
                     .Build());
             }
