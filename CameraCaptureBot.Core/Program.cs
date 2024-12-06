@@ -7,6 +7,8 @@ using CameraCaptureBot.Core.Utils;
 
 var builder = Host.CreateApplicationBuilder(args);
 
+builder.UseLagrangeBots();
+
 builder.Services.AddWindowsService(s =>
 {
     s.ServiceName = "Live stream capture bot";
@@ -21,13 +23,10 @@ builder.Services.AddTransient<BinarySizeFormatter>();
 
 builder.Services.AddSingleton<FfmpegLibWebpEncoder>();
 builder.Services.AddSingleton<CaptureService>();
-builder.Services.AddIsoStorages();
 
-builder.Services.AddBots(() => builder.Configuration
-    .GetRequiredSection(nameof(BotOption))
-    .Get<BotOption>()!);
-builder.Services.AddHostedService<BotHost>();
 builder.Services.AddHostedService<FfMpegConfigureHost>();
 builder.Services.AddHostedService<HeartBeatWorker>();
+
+builder.Services.AddLogging();
 
 builder.Build().Run();

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using CameraCaptureBot.Core.Configs;
@@ -145,7 +144,7 @@ public class FfMpegConfigureHost(
         unsafe
         {
             _logCallback = FfMpegLogInvoke;
-            ffmpeg.av_log_set_level(level);
+            ffmpeg.av_log_set_level(ffmpeg.AV_LOG_TRACE);
             ffmpeg.av_log_set_callback(_logCallback);
         }
     }

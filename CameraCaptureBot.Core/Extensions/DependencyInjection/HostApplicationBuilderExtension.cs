@@ -1,39 +1,38 @@
 ﻿using System.IO.IsolatedStorage;
 using System.Text.Json;
+using CameraCaptureBot.Core.Bots.LagrangeBot;
 using CameraCaptureBot.Core.Configs;
 using Lagrange.Core.Common;
 using Lagrange.Core.Common.Interface;
 
 namespace CameraCaptureBot.Core.Extensions.DependencyInjection;
-
-public static class ServiceCollectionExtension
+public static class HostApplicationBuilderExtension
 {
-    private static readonly Random RandomGen = new();
-
-    public static void AddIsoStorages(this IServiceCollection services)
+    public static IHostApplicationBuilder UseLagrangeBots(this IHostApplicationBuilder builder)
     {
-        services.AddSingleton(IsolatedStorageFile.GetStore(
-            IsolatedStorageScope.User | IsolatedStorageScope.Application, null, null)
-        );
-    }
+        var option = builder.Configuration
+            .GetSection(nameof(BotOption))
+            .Get<BotOption>() ?? new();
 
-    public static void AddBots(this IServiceCollection services, Func<BotOption> config)
-    {
-        var botOption = config.Invoke()
-            ?? throw new ArgumentNullException(nameof(config));
-        using var isoStore = IsolatedStorageFile.GetStore(
+        var isoStore = IsolatedStorageFile.GetStore(
             IsolatedStorageScope.User | IsolatedStorageScope.Application, null, null);
 
-        var deviceInfo = ReadAsJsonOrDelete<BotDeviceInfo>(isoStore, botOption.DeviceInfoFile)
-            ?? GenerateInfo();
+        var deviceInfo = ReadAsJsonOrDelete<BotDeviceInfo>(isoStore, option.LagrangeBotConfig.DeviceInfoFile)
+                         ?? GenerateInfo();
 
-        var keyStore = ReadAsJsonOrDelete<BotKeystore>(isoStore, botOption.KeyStoreFile) 
+        var keyStore = ReadAsJsonOrDelete<BotKeystore>(isoStore, option.LagrangeBotConfig.DeviceInfoFile)
                        ?? new();
 
-        services.AddSingleton(BotFactory.Create(botOption.FrameworkConfig, deviceInfo, keyStore));
+        builder.Services.AddSingleton(_
+            => isoStore);
+        builder.Services.AddSingleton(_
+            => BotFactory.Create(option.LagrangeBotConfig.LagrangeConfig, deviceInfo, keyStore));
+        builder.Services.AddHostedService<LagrangeHost>();
 
-        isoStore.Close();
+        return builder;
     }
+
+    private static readonly Random RandomGen = new();
 
     private static BotDeviceInfo GenerateInfo()
     {
